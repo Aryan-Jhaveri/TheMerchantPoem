@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Visualizer</title>
+    
+    <!-- P5.js Libraries -->
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        .control {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .control__play {
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            padding: 5px 15px;
+            border-radius: 3px;
+            transition: background 0.3s;
+        }
+        
+        .control__play:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .none {
+            display: none;
+        }
+        
+        .fadeout {
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .fadeIn {
+            opacity: 1;
+            transition: opacity 0.5s;
+        }
+
+        #startButton {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1000;
+            background: #B1B1ED;
+            border: none;
+            color: black;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <button id="startButton">Click to Start Audio</button>
+    
+    <div class="control none">
+        <div class="control__name">Life of Pi.mp3 - A.jhaveri</div>
+        <button class="control__play">▶</button>
+    </div>
+
+    <script src="sketch.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startButton = document.getElementById('startButton');
+            const control = document.querySelector('.control');
+            const playButton = document.querySelector('.control__play');
+            let isPlaying = false;
+
+            // Start button handler
+            startButton.addEventListener('click', function() {
+                if (typeof song !== 'undefined') {
+                    // Get audio context and resume it
+                    getAudioContext().resume().then(() => {
+                        song.play();
+                        startButton.style.display = 'none';
+                        control.classList.remove('none');
+                        isPlaying = true;
+                        playButton.textContent = '⏸';
+                    });
+                }
+            });
+
+            // Play/Pause button handler
+            playButton.addEventListener('click', function() {
+                if (typeof song !== 'undefined') {
+                    if (isPlaying) {
+                        song.pause();
+                        playButton.textContent = '▶';
+                    } else {
+                        song.play();
+                        playButton.textContent = '⏸';
+                    }
+                    isPlaying = !isPlaying;
+                }
+            });
+
+            // Control bar visibility
+            let timeout;
+            document.addEventListener('mousemove', function() {
+                control.classList.remove('fadeout');
+                control.classList.add('fadeIn');
+                control.classList.remove('none');
+                
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    control.classList.add('none');
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
