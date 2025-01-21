@@ -1,7 +1,7 @@
 let fft;
 let song;
-let res = 200;
-let baseAmp = 220;
+let res = 100   ;//
+let baseAmp = 150;
 let time = 0;
 let PI;
 
@@ -55,7 +55,7 @@ const bands = {
         noiseScale: 0.01,
         baseStrokeWidth: 2,
         color: [0, 0, 100],
-        radiusOffset: 0,
+        radiusOffset: 10,
         freqRange: [70, 100],
         energyScale: 1.4,
         polarScale: 1.2
@@ -66,7 +66,7 @@ const bands = {
         noiseScale: 0.008,
         baseStrokeWidth: 1.8,
         color: [0, 0, 90],
-        radiusOffset: 80,
+        radiusOffset: 180,
         freqRange: [160, 200],
         energyScale: 1.2,
         polarScale: 1.0
@@ -75,9 +75,9 @@ const bands = {
         iter: 8,
         offset: 0,
         noiseScale: 0.006,
-        baseStrokeWidth: 1.6,
+        baseStrokeWidth: 2,
         color: [0, 0, 80],
-        radiusOffset: 160,
+        radiusOffset: 360,
         freqRange: [300, 360],
         energyScale: 1.0,
         polarScale: 0.8
@@ -86,20 +86,20 @@ const bands = {
         iter: 8,
         offset: 0,
         noiseScale: 0.005,
-        baseStrokeWidth: 1.4,
+        baseStrokeWidth: 3,
         color: [0, 0, 70],
-        radiusOffset: 240,
-        freqRange: [500, 580],
+        radiusOffset: 500,
+        freqRange: [360, 2500],
         energyScale: 0.8,
         polarScale: 0.6
     },
     highMid: {
         iter: 6,
         offset: 0,
-        noiseScale: 0.004,
-        baseStrokeWidth: 1.2,
+        noiseScale: 0.001,
+        baseStrokeWidth: 1.5,
         color: [0, 0, 60],
-        radiusOffset: 320,
+        radiusOffset: 600,
         freqRange: [2500, 2800],
         energyScale: 0.6,
         polarScale: 0.4
