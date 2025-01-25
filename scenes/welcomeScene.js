@@ -1,6 +1,7 @@
 let welcomeScene;
 class WelcomeScene {
   constructor() {
+    this.sceneManager = null;
 
     // Visual elements
     this.stars = [];
@@ -500,7 +501,19 @@ class WelcomeScene {
       pop();
   }
   
+
   drawStartButton() {
+    // Start button
+    push();
+    fill(0);
+    rect(this.startButtonX, this.startButtonY, this.buttonWidth, this.buttonHeight);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    text('Start Journey', this.startButtonX + this.buttonWidth/2, this.startButtonY + this.buttonHeight/2);
+    pop();
+
+    /** 
     push();
     const buttonHover = this.isMouseOverButton();
 
@@ -524,6 +537,7 @@ class WelcomeScene {
       1
     );
     pop();
+    */
   }
   
   drawTextWithShadow(txt, x, y, shadowColor, offset) {
@@ -537,10 +551,16 @@ class WelcomeScene {
   }
   
   isMouseOverButton() {
-  return mouseX > this.startButtonX &&
-         mouseX < this.startButtonX + this.buttonWidth &&
-         mouseY > this.startButtonY &&
-         mouseY < this.startButtonY + this.buttonHeight;
+  const isOver = mouseX > this.startButtonX &&
+    mouseX < this.startButtonX + this.buttonWidth &&
+    mouseY > this.startButtonY &&
+    mouseY < this.startButtonY + this.buttonHeight;
+
+    console.log(`Mouse position: (${mouseX}, ${mouseY})`);
+    console.log(`Button bounds: (${this.startButtonX}, ${this.startButtonY}) to (${this.startButtonX + this.buttonWidth}, ${this.startButtonY + this.buttonHeight})`);
+    console.log(`Is over button: ${isOver}`);
+    
+    return isOver;
   }
   
   updateButtonPosition() {
@@ -576,13 +596,39 @@ class WelcomeScene {
       */
     }
   
-  mousePressed() {
-    if (this.isMouseOverButton()) {
-      // Additional click handling logic can be added here
-      //console.log("Journey started!");
-      sceneManager.switchScene(sceneManager.scenes.JOURNEY);
-    }
+    mousePressed() {
+      if (this.isMouseOverButton()) {
+          console.log("Button clicked, initiating scene transition...");
+          
+          // Add error checking
+          if (!this.sceneManager) {
+              console.error('SceneManager not initialized in WelcomeScene');
+              return;
+          }
+          
+          // Use the scenes enum from SceneManager
+          this.sceneManager.switchScene(this.sceneManager.scenes.JOURNEY);
+      }
   }
+
+  // Add debug method
+  debugSceneManager() {
+      console.log('SceneManager Status:', {
+          exists: !!this.sceneManager,
+          scenes: this.sceneManager ? Object.keys(this.sceneManager.scenes) : 'none',
+          currentScene: this.sceneManager ? this.sceneManager.getCurrentScene() : 'none'
+      });
+  }
+
+  /** 
+    mousePressed() {
+        if (this.isMouseOverButton()) {
+            console.log("switching scene");
+            // Use the stored sceneManager reference
+            sceneManager.switchScene(sceneManager.scenes.JOURNEY);
+        }
+    }
+  */
 }
 
 WelcomeScene.TYPOGRAPHY = {
