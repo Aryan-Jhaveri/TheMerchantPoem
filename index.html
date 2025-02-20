@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Merchant Poem</title>
+    
+    <!-- P5.js Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
+    
+    <!-- Scene Manager -->
+    <script src="libraries/scenemanager.js"></script>
+
+    <!-- Constants and Utilities -->
+    <script src="constants.js"></script>
+    
+    <!-- Scene Classes -->
+    <script src="welcomescene.js"></script>
+    <script src="journeyscene.js"></script>
+    <script src="lastscene.js"></script>
+    
+    <!-- Main Sketch -->
+    <script src="sketch.js"></script>
+
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+        canvas {
+            display: block;
+        }
+        
+        /* Styling for the volume slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            height: 5px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
+  </head>
+  <body>
+    <main>
+    </main>
+  </body>
+</html>
