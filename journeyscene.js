@@ -278,6 +278,8 @@ class JourneyScene {
     background(0, 255);
     this.drawStarryBackground();
 
+    this.drawScrollingContent();
+
     // Only draw moon, waves, and merchant on desktop
     if (this.isDesktopView) {
         if (this.moon) {
@@ -293,8 +295,6 @@ class JourneyScene {
             this.floatingMerchant.display();
         }
     }
-
-    this.drawScrollingContent();
 
     // Handle smooth scrolling with easing
     const scrollEasing = this.isSnapping ? 0.05 : 0.02;
