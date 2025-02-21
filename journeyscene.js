@@ -1,3 +1,5 @@
+
+
 class JourneyScene {
   constructor() {
     console.log('JourneyScene initialized');
@@ -22,6 +24,14 @@ class JourneyScene {
       min: 450,
       max: 460
     };
+
+    this.moon = null;
+    this.assets = {
+      moonImage: null
+    };
+    this.loadedAssets = {
+      moon: false
+    };
   }
 
   enter() {
@@ -32,6 +42,27 @@ class JourneyScene {
   preload() {
     // Add font loading
     this.font = loadFont("assets/Jacquard12-Regular.ttf");
+    
+    // Load moon image
+    this.assets.moonImage = loadImage("assets/moon.png",
+      () => {
+        console.log("Moon image loaded successfully");
+        this.loadedAssets.moon = true;
+        this.checkAllAssetsLoaded();
+      },
+      (err) => console.error('Failed to load moon image:', err)
+    );
+  }
+
+  checkAllAssetsLoaded() {
+    if (Object.values(this.loadedAssets).every(loaded => loaded)) {
+      console.log("All assets loaded");
+      this.setupMoon();
+    }
+  }
+
+  setupMoon() {
+    this.moon = new Moon(this.assets.moonImage);
   }
 
   setup() {
@@ -220,8 +251,15 @@ class JourneyScene {
   draw() {
     background(0, 255);
     this.drawStarryBackground();
-    this.drawScrollingContent();
+
+    // Draw moon after stars but before waves
+    if (this.moon) {
+      this.moon.update();
+      this.moon.display();
+    }
+
     this.drawWave();
+    this.drawScrollingContent();
 
     // Handle smooth scrolling with easing
     const scrollEasing = this.isSnapping ? 0.05 : 0.02;
@@ -232,13 +270,13 @@ class JourneyScene {
     }
     
     this.currentSection = floor(this.scrollY / windowHeight);
+    
+
 
     // Check if we should transition to the last scene
-    const isAtLastSection = this.currentSection >= this.sections.length - 1;
-    const hasScrolledPastEnd = this.scrollY > (this.sections.length - 0.7) * windowHeight;
-    
-    if (isAtLastSection && hasScrolledPastEnd) {
-        window.mgr.showScene(LastScene);
+    if (this.currentSection >= this.sections.length - 1 && 
+        this.scrollY >= this.totalScrollHeight - windowHeight) {
+      sceneManager.switchScene(sceneManager.scenes.LAST);
     }
   }
 
@@ -257,18 +295,8 @@ class JourneyScene {
     
     const direction = event.delta > 0 ? 1 : -1;
     let currentSection = Math.round(this.scrollY / windowHeight);
-    
-    // Check if we're at the last section and scrolling down
-    if (currentSection >= this.sections.length - 1 && direction > 0) {
-        this.targetScrollY = this.sections.length * windowHeight;
-        this.isSnapping = true;
-        setTimeout(() => {
-            window.mgr.showScene(LastScene);
-        }, 500);
-        return false;
-    }
-    
     let targetSection = currentSection + direction;
+    
     targetSection = constrain(targetSection, 0, this.sections.length - 1);
     this.targetScrollY = targetSection * windowHeight;
     
@@ -296,6 +324,10 @@ class JourneyScene {
       min: this.canvash * 0.6,
       max: this.canvash * 0.8
     };
+
+    if (this.moon) {
+      this.moon.handleResize();
+    }
   }
 
   /**
