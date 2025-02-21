@@ -31,19 +31,19 @@ const VISUAL_SETTINGS = {
 // Typography settings
 const TYPOGRAPHY = {
   TITLE: {
-    FONT: 'Jacquar',
+    FONT: 'Jacquard12',
     SIZE: 64,
     LEADING: 1.2,
     COLOR: '#FFFFFF'
   },
   BUTTON: {
-    FONT: 'Jacquard 12',
+    FONT: 'Jacquard12',
     SIZE: 24,
     LEADING: 1.1,
     COLOR: '#FFFFFF'
   },
   POETRY: {
-    FONT: 'Jacquard 12',
+    FONT: 'Jacquard12',
     SIZE: 32,
     LEADING: 1.4,
     COLOR: '#FFFFFF'

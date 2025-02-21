@@ -266,6 +266,7 @@ class WelcomeScene {
       moon: false,
       clouds: false
     };
+    this.font = null;
   }
 
   enter() {
@@ -315,6 +316,9 @@ class WelcomeScene {
         handleImageError
       );
     }
+
+    // Load custom font
+    this.font = loadFont("assets/Jacquard12-Regular.ttf");
   }
 
   checkAllAssetsLoaded() {
@@ -523,7 +527,7 @@ class WelcomeScene {
     // Set text properties
     fill(TYPOGRAPHY.TITLE.COLOR);
     textAlign(CENTER, CENTER);
-    textFont(TYPOGRAPHY.TITLE.FONT);
+    textFont(this.font);
     textSize(TYPOGRAPHY.TITLE.SIZE);
     textLeading(TYPOGRAPHY.TITLE.SIZE * TYPOGRAPHY.TITLE.LEADING);
     
@@ -552,7 +556,7 @@ class WelcomeScene {
     // Draw button text
     fill(TYPOGRAPHY.BUTTON.COLOR);
     textAlign(CENTER, CENTER);
-    textFont(TYPOGRAPHY.BUTTON.FONT);
+    textFont(this.font);
     textSize(TYPOGRAPHY.BUTTON.SIZE);
     textLeading(TYPOGRAPHY.BUTTON.SIZE * TYPOGRAPHY.BUTTON.LEADING);
     
