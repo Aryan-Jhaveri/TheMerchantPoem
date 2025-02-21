@@ -169,7 +169,7 @@ class JourneyScene {
             text: "She's telling me about about Dara Shikoh,\n" +
                 "Shankracharya and Rumi;\n" +
                 "Twisting my neck; She's stretching my ears,\n" +
-                "From acroos the world, and back to the East,\n" +
+                "From across the world, and back to the East,\n" +
                 "So I don't discriminate against Tzu, and Han's Philosophies,",
             yPos: windowHeight * 9
         },
@@ -193,7 +193,7 @@ class JourneyScene {
                 "She's telling me..\n\n" +
                 "She's telling me to be humble\n" +
                 "She's yelling at me to do better,\n" +
-                "Cover my neck, and balance me sheets,\n" +
+                "Cover my neck, and balance my sheets,\n" +
                 "\"Never stop that education !\"\n" +
                 "Just so I can make arrangements for my own personal peace.",
             yPos: windowHeight * 11

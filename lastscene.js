@@ -4,7 +4,7 @@ class LastScene {
     this.sections = {
       about: {
         title: "About This Project",
-        content: "The Merchant Poem, is an interactive media project of a poem I wrote with the goal to share resources with my peers.<br>" +
+        content: "The Merchant Poem, is an interactive media project of a poem I wrote about my Land's Grandmother telling me to strictly do better, in the face of the world's challenges.<br>" +
         "With the treasure trove of information out there, and a seemingly impossible world to navigate, I hope this project can be a helpful guide and a source of motivation<br>" +
         "Do not give into despair, and do not stop learning.<br>" +
         "We are all in this together."
@@ -15,7 +15,7 @@ class LastScene {
           {
             title: "St. Catharines Public Library Card Registration",
             url: "https://www.myscpl.ca/",
-            description: "Access thousands of books, free linkined learning, digital resources, and community programs"
+            description: "For those in Niagara, access thousands of books, free linkedin learning, digital resources, and community programs"
           },
           {
             title: "Open Educational Resources (OER)",
