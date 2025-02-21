@@ -40,8 +40,8 @@ const TYPOGRAPHY = {
   TITLE: {
     FONT: 'Jacquard12',
     SIZE: {
-      MOBILE: 32,    // Smaller size for mobile
-      TABLET: 48,    // Medium size for tablet
+      MOBILE: 55,    // Smaller size for mobile
+      TABLET: 55,    // Medium size for tablet
       DESKTOP: 64    // Original size for desktop
     },
     LEADING: 1.2,
