@@ -13,10 +13,18 @@ class JourneyScene {
     this.isSnapping = false;
     this.snapTarget = 0;
     this.totalScrollHeight = 0;
+
+    this.font = null;
+}
+
+enter() {
+  // Load font when scene enters
+  this.preload();
 }
 
   preload() {
-    // Add any asset preloading here
+    // Add font loading
+    this.font = loadFont("assets/Jacquard12-Regular.ttf");
   }
 
   setup() {
@@ -159,50 +167,55 @@ class JourneyScene {
 
   drawScrollingContent() {
     push();
-    resetMatrix(); // Reset any transformations
-    translate(0, -this.scrollY);  // Apply scroll offset
+    resetMatrix();
+    translate(0, -this.scrollY);
     
     this.sections.forEach((section, index) => {
-      let sectionY = index * windowHeight; // Use windowHeight for consistent section heights
+      let sectionY = index * windowHeight;
       
-      // Only draw if section is in view
       if (sectionY + windowHeight < this.scrollY - windowHeight || 
           sectionY > this.scrollY + windowHeight * 2) {
         return;
       }
       
       if (this.isDesktopView) {
-        // Desktop: Split screen
-        // First draw the image placeholder on the left
+        // Desktop view
+        const rectWidth = width * 0.4;
+        const rectX = 0;      
         fill(40);
-        color(0, 0, 100);
-        rect(0, sectionY, width/2, height);  // Changed from width/2 to 0 for left side
+        rect(rectX, sectionY, rectWidth, height);
         
-        // Then draw text on the right
-        fill(255);
-        noStroke();
-        textAlign(LEFT, CENTER);
-        textSize(24);
-        text(section.text, width/2 + 50, sectionY + height/2, width/2 - 100);  // Changed starting x position to width/2 + 50
-      } else {
-        // Mobile: Stacked layout
-        // Image area on top
-        fill(40);
-        rect(0, sectionY, width, height/2);
+        const textX = rectX + rectWidth + 50;
+        const textWidth = width - textX - 50;
         
-        // Text area below
-        fill(255);
+        fill(TYPOGRAPHY.TITLE.COLOR);
         noStroke();
         textAlign(LEFT, TOP);
-        textSize(24);
-
-        // Calculate text position in bottom half
-        const textPadding = 70; // Padding from top of bottom half
-        const textX = 40;
-        const textY = sectionY + height/2 + textPadding;
-        const textWidth = width - 100;
-
-        text(section.text, 50, sectionY + height/2, width - 100);
+        textFont(this.font);
+        textSize(TYPOGRAPHY.TITLE.SIZE * 0.5);
+        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.8);
+        
+        const textY = sectionY + (height * 0.15);
+        text(section.text, textX, textY, textWidth, height * 0.8);
+      } else {
+        // Mobile view
+        // Adjust rectangle dimensions
+        const rectHeight = height * 0.4;
+        fill(40);
+        rect(0, sectionY, width, rectHeight);
+        
+        // Adjust text position and styling
+        const textY = sectionY + rectHeight + 30;
+        const textHeight = height - rectHeight - 60;
+        
+        fill(TYPOGRAPHY.TITLE.COLOR);
+        noStroke();
+        textAlign(LEFT, TOP);
+        textFont(this.font);
+        textSize(TYPOGRAPHY.TITLE.SIZE * 0.4);     // Even smaller for mobile
+        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.7);  // Tighter line spacing for mobile
+        
+        text(section.text, 50, textY, width - 100, textHeight);
       }
     });
     pop();
