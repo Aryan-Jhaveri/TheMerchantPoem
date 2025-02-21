@@ -81,33 +81,45 @@ class LastScene {
     aboutContent.style('line-height', '1.6');
   }
 
+  // Add mobile detection method
+  isMobile() {
+    return windowWidth < 768; // Common mobile breakpoint
+  }
+
   createResourcesSection() {
     const resourcesContainer = createDiv('');
     resourcesContainer.class('resources-section');
-    resourcesContainer.position(width * 0.1, height * 0.4);
-    resourcesContainer.style('width', '80%');
     
+    // Responsive positioning
+    const yPosition = this.isMobile() ? height * 0.6 : height * 0.4;
+    resourcesContainer.position(width * 0.1, yPosition);
+    resourcesContainer.style('width', '80%');
+
     const resourcesTitle = createElement('h2', this.sections.resources.title);
     resourcesTitle.parent(resourcesContainer);
     resourcesTitle.style('color', '#ffffff');
-    resourcesTitle.style('font-size', '2em');
-    
+    resourcesTitle.style('font-size', this.isMobile() ? '1.5em' : '2em'); // Smaller title on mobile
+
     this.sections.resources.links.forEach(link => {
       const linkContainer = createDiv('');
       linkContainer.parent(resourcesContainer);
-      linkContainer.style('margin-bottom', '20px');
-      
+      linkContainer.style('margin-bottom', this.isMobile() ? '15px' : '20px');
+
       const a = createA(link.url, link.title);
       a.parent(linkContainer);
       a.style('color', this.styles.link.color);
       a.style('text-decoration', 'none');
+      a.style('font-size', this.isMobile() ? '14px' : '16px'); // Responsive link size
+      a.style('padding', this.isMobile() ? '2px 0' : '5px 0'); // Tighter padding on mobile
       a.mouseOver(() => a.style('color', this.styles.link.hoverColor));
       a.mouseOut(() => a.style('color', this.styles.link.color));
-      
+
       const description = createP(link.description);
       description.parent(linkContainer);
       description.style('color', '#ffffff');
       description.style('margin-top', '5px');
+      description.style('font-size', this.isMobile() ? '12px' : '14px'); // Smaller description text
+      description.style('line-height', this.isMobile() ? '1.4' : '1.6');
     });
   }
 
