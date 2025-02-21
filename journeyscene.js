@@ -320,12 +320,25 @@ class JourneyScene {
         return false;
     }
     
-    if (Math.abs(event.delta) < 10) {
+    // Normalize delta for both mouse and touch
+    let delta = event.delta;
+    
+    // Adjust threshold based on input type
+    const threshold = 10;
+    if (Math.abs(delta) < threshold) {
         return false;
     }
     
-    const direction = event.delta > 0 ? 1 : -1;
+    const direction = delta > 0 ? 1 : -1;
     let currentSection = Math.round(this.scrollY / windowHeight);
+    
+    // Debug logging
+    console.log('Scroll event:', {
+        delta: delta,
+        direction: direction,
+        currentSection: currentSection,
+        totalSections: this.sections.length
+    });
     
     // Check if we're at the last section and scrolling down
     if (currentSection >= this.sections.length - 1 && direction > 0) {

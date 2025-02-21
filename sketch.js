@@ -3,6 +3,8 @@ let backgroundMusic;
 let playButton;
 let volumeSlider;
 let isPlaying = false;
+let touchStartY = null;
+let lastTouchY = null;
 
 function preload() {
   // Load the music file
@@ -157,4 +159,56 @@ function windowResized() {
   if (mgr && mgr.scene && mgr.scene.windowResized) {
     mgr.scene.windowResized();
   }
+}
+
+function touchStarted(event) {
+  if (touches.length > 0) {
+    touchStartY = touches[0].y;
+    lastTouchY = touches[0].y;
+    
+    // Route touch as mouse press for buttons/interactions
+    if (mgr && mgr.scene) {
+      const actualScene = mgr.scene.oScene;
+      if (typeof actualScene.mousePressed === 'function') {
+        actualScene.mousePressed();
+      }
+    }
+  }
+  return false;
+}
+
+function touchMoved(event) {
+  event.preventDefault();
+  
+  if (!touchStartY) return false;
+  
+  if (mgr && mgr.scene && touches.length > 0) {
+    const actualScene = mgr.scene.oScene;
+    const currentTouchY = touches[0].y;
+    const touchDelta = lastTouchY - currentTouchY;
+    
+    // If movement is small, don't trigger scroll
+    if (Math.abs(touchDelta) <= 5) {
+      return false;
+    }
+    
+    // Handle scroll
+    if (typeof actualScene.mouseWheel === 'function') {
+      const touchEvent = {
+        delta: touchDelta
+      };
+      lastTouchY = currentTouchY;
+      return actualScene.mouseWheel(touchEvent);
+    }
+  }
+  return false;
+}
+
+function touchEnded() {
+  // Only clear if we actually had a touch start
+  if (touchStartY !== null) {
+    touchStartY = null;
+    lastTouchY = null;
+  }
+  return false;
 }
