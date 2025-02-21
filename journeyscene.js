@@ -15,6 +15,13 @@ class JourneyScene {
     this.totalScrollHeight = 0;
 
     this.font = null;
+
+    // Add wave properties
+    this.yoff = VISUAL_SETTINGS.WAVE.Y_OFFSET_START;
+    this.yRange = {
+      min: 450,
+      max: 460
+    };
   }
 
   enter() {
@@ -173,49 +180,38 @@ class JourneyScene {
     this.sections.forEach((section, index) => {
       let sectionY = index * windowHeight;
       
+      // Skip sections that are far outside the viewport
       if (sectionY + windowHeight < this.scrollY - windowHeight || 
           sectionY > this.scrollY + windowHeight * 2) {
         return;
       }
       
+      // Text styling
+      fill(TYPOGRAPHY.TITLE.COLOR);
+      noStroke();
+      textAlign(CENTER, TOP);
+      textFont(this.font);
+      
       if (this.isDesktopView) {
         // Desktop view
-        const rectWidth = width * 0.4;
-        const rectX = 0;      
-        fill(40);
-        rect(rectX, sectionY, rectWidth, height);
+        const textPadding = width * 0.1; // 10% padding on each side
+        const textWidth = width - (textPadding * 2);
+        const textY = sectionY + (height * 0.05);
         
-        const textX = rectX + rectWidth + 50;
-        const textWidth = width - textX - 50;
-        
-        fill(TYPOGRAPHY.TITLE.COLOR);
-        noStroke();
-        textAlign(LEFT, TOP);
-        textFont(this.font);
         textSize(TYPOGRAPHY.TITLE.SIZE * 0.5);
-        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.8);
+        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.5);
         
-        const textY = sectionY + (height * 0.15);
-        text(section.text, textX, textY, textWidth, height * 0.8);
+        text(section.text, textPadding, textY, textWidth, height * 0.8);
       } else {
         // Mobile view
-        // Adjust rectangle dimensions
-        const rectHeight = height * 0.4;
-        fill(40);
-        rect(0, sectionY, width, rectHeight);
+        const textPadding = width * 0.15; // 15% padding on each side for mobile
+        const textWidth = width - (textPadding * 2);
+        const textY = sectionY + (height * 0.15);
         
-        // Adjust text position and styling
-        const textY = sectionY + rectHeight + 30;
-        const textHeight = height - rectHeight - 60;
+        textSize(TYPOGRAPHY.TITLE.SIZE * 0.4);
+        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.7);
         
-        fill(TYPOGRAPHY.TITLE.COLOR);
-        noStroke();
-        textAlign(LEFT, TOP);
-        textFont(this.font);
-        textSize(TYPOGRAPHY.TITLE.SIZE * 0.4);     // Even smaller for mobile
-        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.7);  // Tighter line spacing for mobile
-        
-        text(section.text, 50, textY, width - 100, textHeight);
+        text(section.text, textPadding, textY, textWidth, height * 0.8);
       }
     });
     pop();
@@ -224,6 +220,8 @@ class JourneyScene {
   draw() {
     background(0, 255);
     this.drawStarryBackground();
+    this.drawScrollingContent();
+    this.drawWave();
 
     // Handle smooth scrolling with easing
     const scrollEasing = this.isSnapping ? 0.05 : 0.02;
@@ -234,13 +232,13 @@ class JourneyScene {
     }
     
     this.currentSection = floor(this.scrollY / windowHeight);
-    
-    this.drawScrollingContent();
 
     // Check if we should transition to the last scene
-    if (this.currentSection >= this.sections.length - 1 && 
-        this.scrollY >= this.totalScrollHeight - windowHeight) {
-      sceneManager.switchScene(sceneManager.scenes.LAST);
+    const isAtLastSection = this.currentSection >= this.sections.length - 1;
+    const hasScrolledPastEnd = this.scrollY > (this.sections.length - 0.7) * windowHeight;
+    
+    if (isAtLastSection && hasScrolledPastEnd) {
+        window.mgr.showScene(LastScene);
     }
   }
 
@@ -259,8 +257,18 @@ class JourneyScene {
     
     const direction = event.delta > 0 ? 1 : -1;
     let currentSection = Math.round(this.scrollY / windowHeight);
-    let targetSection = currentSection + direction;
     
+    // Check if we're at the last section and scrolling down
+    if (currentSection >= this.sections.length - 1 && direction > 0) {
+        this.targetScrollY = this.sections.length * windowHeight;
+        this.isSnapping = true;
+        setTimeout(() => {
+            window.mgr.showScene(LastScene);
+        }, 500);
+        return false;
+    }
+    
+    let targetSection = currentSection + direction;
     targetSection = constrain(targetSection, 0, this.sections.length - 1);
     this.targetScrollY = targetSection * windowHeight;
     
@@ -282,5 +290,111 @@ class JourneyScene {
     const currentSection = Math.floor(this.scrollY / windowHeight);
     this.scrollY = currentSection * windowHeight;
     this.targetScrollY = this.scrollY;
+
+    // Update wave boundaries
+    this.yRange = {
+      min: this.canvash * 0.6,
+      max: this.canvash * 0.8
+    };
+  }
+
+  /**
+   * Draw the ocean waves
+   * This function updates and displays the ocean waves
+   */
+  drawWave() {
+    const t = frameCount * 0.0003; // Time variable for texture animation
+    
+    // Draw three wave layers with different properties
+    for (let waveIndex = 0; waveIndex < 3; waveIndex++) {
+      push();
+      
+      // Configure wave layer properties
+      const alpha = map(waveIndex, 0, 2, 300, 50);
+      const waveColor = color(55, 78, 135, alpha);
+      
+      // Calculate wave boundaries
+      const yMin = this.yRange.min;
+      const yMax = this.yRange.max;
+      
+      // Create the main wave shape
+      beginShape();
+      noStroke();
+      fill(waveColor);
+      
+      // Generate wave points using Perlin noise
+      const wavePoints = [];
+      let xoff = 0;
+      
+      // Create wave vertices
+      vertex(-20, height);
+      for (let x = -20; x <= width + 20; x += VISUAL_SETTINGS.WAVE.STEP) {
+        const y = map(
+          noise(xoff, this.yoff + waveIndex * 0.5),
+          0, 1,
+          yMin, yMax
+        );
+        vertex(x, y);
+        wavePoints.push({ x, y });
+        xoff += VISUAL_SETTINGS.WAVE.NOISE_SCALE;
+      }
+      vertex(width + 20, height);
+      endShape(CLOSE);
+      
+      // Add pixelated texture within the wave shape
+      this.addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex);
+      
+      pop();
+    }
+    
+    // Update noise offset for continuous wave movement
+    this.yoff += VISUAL_SETTINGS.WAVE.Y_INCREMENT;
+  }
+
+  /**
+   * Adds pixelated texture effect to the wave
+   * @param {Array} wavePoints - Array of wave vertex positions
+   * @param {p5.Color} waveColor - Base color of the wave
+   * @param {number} alpha - Opacity value
+   * @param {number} t - Time variable for animation
+   * @param {number} waveIndex - Current wave layer index
+   */
+  addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
+    const pixelSize = 20;
+    
+    for (let x = 0; x < width; x += pixelSize) {
+      // Find wave height at current x position
+      const waveX = x + 20;
+      const index = constrain(
+        floor(waveX / VISUAL_SETTINGS.WAVE.STEP),
+        0,
+        wavePoints.length - 2
+      );
+      
+      // Interpolate wave height
+      const waveHeight = lerp(
+        wavePoints[index].y,
+        wavePoints[index + 1].y,
+        (waveX % VISUAL_SETTINGS.WAVE.STEP) / VISUAL_SETTINGS.WAVE.STEP
+      );
+      
+      // Draw textured pixels from wave height to bottom
+      for (let y = floor(waveHeight); y < height; y += pixelSize) {
+        const noiseVal = noise(0.06 * x * t, 0.03 * y + waveIndex * 0.5);
+        const brightness = map(noiseVal, 0, 2, 0.7, 1);
+        
+        // Apply noise-based brightness to wave color
+        const pixelColor = color(
+          red(waveColor) * brightness,
+          green(waveColor) * brightness,
+          blue(waveColor) * brightness,
+          alpha
+        );
+        
+        fill(pixelColor);
+        noStroke();
+        rect(x, y, pixelSize, pixelSize);
+      }
+    }
   }
 } 
