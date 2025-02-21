@@ -4,6 +4,9 @@ let playButton;
 let volumeSlider;
 let isPlaying = false;
 
+let touchStartY = null;
+let lastTouchY = null;
+
 function preload() {
   // Load the music file
   soundFormats('mp3');

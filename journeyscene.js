@@ -115,7 +115,7 @@ class JourneyScene {
         },
         {
             text: "But I am disappointed in this world's bright red hue,\n" +
-                "And it's archaic autocrats,\n" +
+                "And its archaic autocrats,\n" +
                 "With their crowns shining it's zirconium streak,",
             yPos: windowHeight * 2
         },
@@ -143,7 +143,7 @@ class JourneyScene {
             yPos: windowHeight * 5
         },
         {
-            text: "\"You better be planting those trees when your on my sister's land,\n" +
+            text: "\"You better be planting those trees when you're on my sister's land,\n" +
                 "Turtle island blemished with the their greedy plans;\n" +
                 "Pillaged my nephews and nieces,\n" +
                 "Under the guise of the ol' divine providence;\n" +
