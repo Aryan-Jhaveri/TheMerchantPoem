@@ -31,23 +31,55 @@ class LastScene {
       }
     };
     
-    this.styles = {
-      text: {
-        size: 16,
-        lineHeight: 24,
-        color: 255
-      },
-      heading: {
-        size: 32,
-        color: 255
-      },
-      link: {
-        color: '#64B5F6',
-        hoverColor: '#90CAF9'
-      }
-    };
+ // Add responsive layout settings
+ this.layout = {
+  breakpoints: {
+    mobile: 768,
+    tablet: 1024
+  },
+  spacing: {
+    getSectionMargin: () => {
+      return this.isMobile() ? 0.05 : 0.1;
+    },
+    getContentWidth: () => {
+      return this.isMobile() ? 0.9 : 0.8;
+    }
+  },
+  positioning: {
+    getAboutPosition: () => {
+      const margin = this.layout.spacing.getSectionMargin();
+      return {
+        x: width * margin,
+        y: height * (this.isMobile() ? 0.08 : 0.1)
+      };
+    },
+    getResourcesPosition: () => {
+      const margin = this.layout.spacing.getSectionMargin();
+      return {
+        x: width * margin,
+        y: height * (this.isMobile() ? 0.5 : 0.4)
+      };
+    }
+  }
+};
 
-    this.font = null;
+this.styles = {
+  text: {
+    getSize: () => this.isMobile() ? 14 : 16,
+    lineHeight: 24,
+    color: 255
+  },
+  heading: {
+    getSize: () => this.isMobile() ? 24 : 32,
+    color: 255
+  },
+  link: {
+    color: '#64B5F6',
+    hoverColor: '#90CAF9'
+  }
+};
+
+this.font = null;
   }
 
   preload() {
@@ -81,24 +113,49 @@ class LastScene {
     aboutContent.style('line-height', '1.6');
   }
 
-  // Add mobile detection method
   isMobile() {
-    return windowWidth < 768; // Common mobile breakpoint
+    return windowWidth < this.layout.breakpoints.mobile;
+  }
+
+  isTablet() {
+    return windowWidth >= this.layout.breakpoints.mobile && 
+           windowWidth < this.layout.breakpoints.tablet;
+  }
+
+  createAboutSection() {
+    const position = this.layout.positioning.getAboutPosition();
+    const contentWidth = this.layout.spacing.getContentWidth();
+    
+    const aboutContainer = createDiv('');
+    aboutContainer.class('about-section');
+    aboutContainer.position(position.x, position.y);
+    aboutContainer.style('width', `${contentWidth * 100}%`);
+    
+    const aboutTitle = createElement('h2', this.sections.about.title);
+    aboutTitle.parent(aboutContainer);
+    aboutTitle.style('color', '#ffffff');
+    aboutTitle.style('font-size', `${this.styles.heading.getSize()}px`);
+    
+    const aboutContent = createP(this.sections.about.content);
+    aboutContent.parent(aboutContainer);
+    aboutContent.style('color', '#ffffff');
+    aboutContent.style('line-height', '1.6');
+    aboutContent.style('font-size', `${this.styles.text.getSize()}px`);
   }
 
   createResourcesSection() {
+    const position = this.layout.positioning.getResourcesPosition();
+    const contentWidth = this.layout.spacing.getContentWidth();
+    
     const resourcesContainer = createDiv('');
     resourcesContainer.class('resources-section');
-    
-    // Responsive positioning
-    const yPosition = this.isMobile() ? height * 0.6 : height * 0.4;
-    resourcesContainer.position(width * 0.1, yPosition);
-    resourcesContainer.style('width', '80%');
+    resourcesContainer.position(position.x, position.y);
+    resourcesContainer.style('width', `${contentWidth * 100}%`);
 
     const resourcesTitle = createElement('h2', this.sections.resources.title);
     resourcesTitle.parent(resourcesContainer);
     resourcesTitle.style('color', '#ffffff');
-    resourcesTitle.style('font-size', this.isMobile() ? '1.5em' : '2em'); // Smaller title on mobile
+    resourcesTitle.style('font-size', `${this.styles.heading.getSize()}px`);
 
     this.sections.resources.links.forEach(link => {
       const linkContainer = createDiv('');
@@ -109,8 +166,8 @@ class LastScene {
       a.parent(linkContainer);
       a.style('color', this.styles.link.color);
       a.style('text-decoration', 'none');
-      a.style('font-size', this.isMobile() ? '14px' : '16px'); // Responsive link size
-      a.style('padding', this.isMobile() ? '2px 0' : '5px 0'); // Tighter padding on mobile
+      a.style('font-size', `${this.styles.text.getSize()}px`);
+      a.style('padding', this.isMobile() ? '2px 0' : '5px 0');
       a.mouseOver(() => a.style('color', this.styles.link.hoverColor));
       a.mouseOut(() => a.style('color', this.styles.link.color));
 
@@ -118,8 +175,8 @@ class LastScene {
       description.parent(linkContainer);
       description.style('color', '#ffffff');
       description.style('margin-top', '5px');
-      description.style('font-size', this.isMobile() ? '12px' : '14px'); // Smaller description text
-      description.style('line-height', this.isMobile() ? '1.4' : '1.6');
+      description.style('font-size', `${this.styles.text.getSize() - 2}px`);
+      description.style('line-height', '1.6');
     });
   }
 
@@ -148,7 +205,10 @@ class LastScene {
 
   windowResized() {
     resizeCanvas(windowWidth, windowHeight);
-    // Update positions of elements
+    // Remove existing sections
+    select('.about-section').remove();
+    select('.resources-section').remove();
+    // Recreate sections with new dimensions
     this.createAboutSection();
     this.createResourcesSection();
   }
