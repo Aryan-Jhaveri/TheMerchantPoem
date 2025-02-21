@@ -512,19 +512,6 @@ class WelcomeScene {
     this.yoff += VISUAL_SETTINGS.WAVE.Y_INCREMENT;
   }
 
-  /**
- * Add wave texture to the wave shape
- * This function adds a pixelated texture to the wave shape
- */
-  addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
-    const pixelSize = 20;
-    
-    if (this.isMouseOverButton()) {
-      // Change scene when button is clicked
-      window.mgr.showScene(JourneyScene);
-    }
-  }
-
 /**
  * Adds pixelated texture effect to the wave
  * @param {Array} wavePoints - Array of wave vertex positions

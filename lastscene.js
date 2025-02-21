@@ -31,56 +31,56 @@ class LastScene {
       }
     };
     
- // Add responsive layout settings
- this.layout = {
-  breakpoints: {
-    mobile: 768,
-    tablet: 1024
-  },
-  spacing: {
-    getSectionMargin: () => {
-      return this.isMobile() ? 0.05 : 0.1;
+  // Add responsive layout settings
+  this.layout = {
+    breakpoints: {
+      mobile: 768,
+      tablet: 1024
     },
-    getContentWidth: () => {
-      return this.isMobile() ? 0.9 : 0.8;
-    }
-  },
-  positioning: {
-    getAboutPosition: () => {
-      const margin = this.layout.spacing.getSectionMargin();
-      return {
-        x: width * margin,
-        y: height * (this.isMobile() ? 0.08 : 0.1)
-      };
+    spacing: {
+      getSectionMargin: () => {
+        return this.isMobile() ? 0.05 : 0.1;
+      },
+      getContentWidth: () => {
+        return this.isMobile() ? 0.9 : 0.8;
+      }
     },
-    getResourcesPosition: () => {
-      const margin = this.layout.spacing.getSectionMargin();
-      return {
-        x: width * margin,
-        y: height * (this.isMobile() ? 0.5 : 0.4)
-      };
+    positioning: {
+      getAboutPosition: () => {
+        const margin = this.layout.spacing.getSectionMargin();
+        return {
+          x: width * margin,
+          y: height * (this.isMobile() ? 0.08 : 0.1)
+        };
+      },
+      getResourcesPosition: () => {
+        const margin = this.layout.spacing.getSectionMargin();
+        return {
+          x: width * margin,
+          y: height * (this.isMobile() ? 0.5 : 0.4)
+        };
+      }
     }
-  }
-};
+  };
 
-this.styles = {
-  text: {
-    getSize: () => this.isMobile() ? 14 : 16,
-    lineHeight: 24,
-    color: 255
-  },
-  heading: {
-    getSize: () => this.isMobile() ? 24 : 32,
-    color: 255
-  },
-  link: {
-    color: '#64B5F6',
-    hoverColor: '#90CAF9'
-  }
-};
+  this.styles = {
+    text: {
+      getSize: () => this.isMobile() ? 14 : 16,
+      lineHeight: 24,
+      color: 255
+    },
+    heading: {
+      getSize: () => this.isMobile() ? 24 : 32,
+      color: 255
+    },
+    link: {
+      color: '#64B5F6',
+      hoverColor: '#90CAF9'
+    }
+  };
 
-this.font = null;
-  }
+  this.font = null;
+}
 
   preload() {
     // Load custom font if needed
@@ -89,7 +89,7 @@ this.font = null;
 
   setup() {
     createCanvas(windowWidth, windowHeight);
-    textSize(this.styles.text.size);
+    this.initializeStars();
     
     // Create section containers
     this.createAboutSection();
@@ -97,32 +97,12 @@ this.font = null;
   }
 
   createAboutSection() {
-    const aboutContainer = createDiv('');
-    aboutContainer.class('about-section');
-    aboutContainer.position(width * 0.1, height * 0.1);
-    aboutContainer.style('width', '80%');
-    
-    const aboutTitle = createElement('h2', this.sections.about.title);
-    aboutTitle.parent(aboutContainer);
-    aboutTitle.style('color', '#ffffff');
-    aboutTitle.style('font-size', '2em');
-    
-    const aboutContent = createP(this.sections.about.content);
-    aboutContent.parent(aboutContainer);
-    aboutContent.style('color', '#ffffff');
-    aboutContent.style('line-height', '1.6');
-  }
+    // Remove existing section if it exists
+    const existingSection = select('.about-section');
+    if (existingSection) {
+      existingSection.remove();
+    }
 
-  isMobile() {
-    return windowWidth < this.layout.breakpoints.mobile;
-  }
-
-  isTablet() {
-    return windowWidth >= this.layout.breakpoints.mobile && 
-           windowWidth < this.layout.breakpoints.tablet;
-  }
-
-  createAboutSection() {
     const position = this.layout.positioning.getAboutPosition();
     const contentWidth = this.layout.spacing.getContentWidth();
     
@@ -144,6 +124,12 @@ this.font = null;
   }
 
   createResourcesSection() {
+    // Remove existing section if it exists
+    const existingSection = select('.resources-section');
+    if (existingSection) {
+      existingSection.remove();
+    }
+
     const position = this.layout.positioning.getResourcesPosition();
     const contentWidth = this.layout.spacing.getContentWidth();
     
@@ -180,14 +166,24 @@ this.font = null;
     });
   }
 
-   // Add star initialization method
+
+  isMobile() {
+    return windowWidth < this.layout.breakpoints.mobile;
+  }
+
+  isTablet() {
+    return windowWidth >= this.layout.breakpoints.mobile && 
+           windowWidth < this.layout.breakpoints.tablet;
+  }
+
+
    initializeStars() {
     for (let i = 0; i < VISUAL_SETTINGS.STAR_COUNT; i++) {
       this.stars.push(new Star());
     }
   }
 
-  // Add star background drawing method
+
   drawStarryBackground() {
     this.stars.forEach(star => {
       star.update();
@@ -197,7 +193,7 @@ this.font = null;
 
   draw() {
     background(0,255);
-    this.drawStarryBackground();
+    //this.drawStarryBackground();
   }
 
   mousePressed() {
@@ -205,10 +201,6 @@ this.font = null;
 
   windowResized() {
     resizeCanvas(windowWidth, windowHeight);
-    // Remove existing sections
-    select('.about-section').remove();
-    select('.resources-section').remove();
-    // Recreate sections with new dimensions
     this.createAboutSection();
     this.createResourcesSection();
   }

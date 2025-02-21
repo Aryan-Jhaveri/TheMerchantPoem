@@ -106,7 +106,7 @@ class JourneyScene {
                 "And my blood takes after my seafaring grand uncles that sold merch's;\n" +
                 "They gifted me with the wisdom to find all that is diplomatic,\n" +
                 "and with the sight to see at all our world's opportunities,\n" +
-                "\n{Swipe down}",
+                "\n \n{Swipe down}",
             yPos: 0
         },
         {
@@ -256,8 +256,8 @@ class JourneyScene {
         const textWidth = width - (textPadding * 2);
         const textY = sectionY + (height * 0.05);
         
-        textSize(TYPOGRAPHY.TITLE.SIZE * 0.5);
-        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.5);
+        textSize(TYPOGRAPHY.TITLE.SIZE.DESKTOP * 0.5);
+        textLeading(TYPOGRAPHY.TITLE.SIZE.DESKTOP * 0.5);
         
         text(section.text, textPadding, textY, textWidth, height * 0.8);
       } else {
@@ -266,8 +266,8 @@ class JourneyScene {
         const textWidth = width - (textPadding * 2);
         const textY = sectionY + (height * 0.15);
         
-        textSize(TYPOGRAPHY.TITLE.SIZE * 0.4);
-        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.5);
+        textSize(TYPOGRAPHY.TITLE.SIZE.MOBILE * 0.4);
+        textLeading(TYPOGRAPHY.TITLE.SIZE.MOBILE * 0.5);
         
         text(section.text, textPadding, textY, textWidth, height * 0.8);
       }

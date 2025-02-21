@@ -16,7 +16,7 @@ function preload() {
       // Add user interaction check
       if (getAudioContext().state !== 'running') {
         getAudioContext().resume().then(() => {
-          backgroundMusic.setVolume(0.5); 
+          backgroundMusic.setVolume(volumeSlider.value()); 
           backgroundMusic.loop();
           isPlaying = true;
           if (playButton) {
@@ -24,7 +24,7 @@ function preload() {
           }
         });
       } else {
-        backgroundMusic.setVolume(0.5);
+        backgroundMusic.setVolume(volumeSlider.value());
         backgroundMusic.loop();
         isPlaying = true;
         if (playButton) {
