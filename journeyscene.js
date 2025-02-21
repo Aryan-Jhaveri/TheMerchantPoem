@@ -278,19 +278,23 @@ class JourneyScene {
     background(0, 255);
     this.drawStarryBackground();
 
-    if (this.moon) {
-      this.moon.update();
-      this.moon.display();
+    // Only draw moon, waves, and merchant on desktop
+    if (this.isDesktopView) {
+        if (this.moon) {
+            this.moon.update();
+            this.moon.display();
+        }
+
+        this.drawWave();
+
+        if (this.floatingMerchant) {
+            this.floatingMerchant.yoff = this.yoff;
+            this.floatingMerchant.update();
+            this.floatingMerchant.display();
+        }
     }
 
     this.drawScrollingContent();
-    this.drawWave();
-
-    if (this.floatingMerchant) {
-      this.floatingMerchant.yoff = this.yoff;
-      this.floatingMerchant.update();
-      this.floatingMerchant.display();
-    }
 
     // Handle smooth scrolling with easing
     const scrollEasing = this.isSnapping ? 0.05 : 0.02;
@@ -320,25 +324,12 @@ class JourneyScene {
         return false;
     }
     
-    // Normalize delta for both mouse and touch
-    let delta = event.delta;
-    
-    // Adjust threshold based on input type
-    const threshold = 10;
-    if (Math.abs(delta) < threshold) {
+    if (Math.abs(event.delta) < 10) {
         return false;
     }
     
-    const direction = delta > 0 ? 1 : -1;
+    const direction = event.delta > 0 ? 1 : -1;
     let currentSection = Math.round(this.scrollY / windowHeight);
-    
-    // Debug logging
-    console.log('Scroll event:', {
-        delta: delta,
-        direction: direction,
-        currentSection: currentSection,
-        totalSections: this.sections.length
-    });
     
     // Check if we're at the last section and scrolling down
     if (currentSection >= this.sections.length - 1 && direction > 0) {
