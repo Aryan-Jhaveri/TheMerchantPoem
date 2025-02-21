@@ -167,7 +167,7 @@ class JourneyScene {
             yPos: windowHeight * 8
         },
         {
-            text: "She's telling me about about Dara Shikoh,\n" +
+            text: "She's telling me about Dara Shikoh,\n" +
                 "Shankracharya and Rumi;\n" +
                 "Twisting my neck; She's stretching my ears,\n" +
                 "From across the world, and back to the East,\n" +
