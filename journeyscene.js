@@ -15,12 +15,12 @@ class JourneyScene {
     this.totalScrollHeight = 0;
 
     this.font = null;
-}
+  }
 
-enter() {
+  enter() {
   // Load font when scene enters
   this.preload();
-}
+  }
 
   preload() {
     // Add font loading
@@ -97,8 +97,8 @@ enter() {
                 "\"Better now!\" she thinks, -\n" +
                 "Learnt from the cycles of the eons, she's seen,\n" +
                 "before she too has to see my head anchored off my body,\n" +
-                "chopped, and rolling down some random hill\n", //+
-                //"victim again of the fanatics of the world",
+                "chopped, and rolling down some random hill\n" +
+                "victim again of the fanatics of the world\n",
             yPos: windowHeight * 8
         },
         {

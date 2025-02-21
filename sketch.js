@@ -142,17 +142,10 @@ function mousePressed() {
 }
 
 function mouseWheel(event) {
-  console.log('Main mouseWheel event received', event.delta);
   if (mgr && mgr.scene) {
-    const actualScene = mgr.scene.oScene;  // Get the actual scene instance
-    console.log('Current scene:', actualScene.constructor.name);
-    console.log('Scene methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(actualScene)));
-    
+    const actualScene = mgr.scene.oScene;
     if (typeof actualScene.mouseWheel === 'function') {
-      console.log('Found mouseWheel handler, calling it');
       return actualScene.mouseWheel(event);
-    } else {
-      console.log('Scene has no mouseWheel handler');
     }
   }
   return true;
