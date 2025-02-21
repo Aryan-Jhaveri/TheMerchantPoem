@@ -34,9 +34,13 @@ function preload() {
     }
   );
 
-  // Preload assets for the welcome scene
+  // Preload assets for all scenes
   window.welcomeScene = new WelcomeScene();
+  window.journeyScene = new JourneyScene();
   window.welcomeScene.preload();
+
+  window.journeyScene.preload();
+  
 }
 
 function setup() {
@@ -51,13 +55,16 @@ function setup() {
   mgr = new SceneManager();
   window.mgr = mgr;
 
-  mgr.addScene(WelcomeScene);
-  mgr.addScene(JourneyScene);
-  mgr.addScene(LastScene);
+  // Add scenes only after they're loaded
+  if (window.welcomeScene) mgr.addScene(WelcomeScene);
+  if (window.journeyScene) mgr.addScene(JourneyScene);
+  if (window.lastScene) mgr.addScene(LastScene);
 
   // Configure scene manager to call enter() on scene changes
   mgr.wire = function() {
-    this.scenes[this.scene].enter();
+    if (this.scenes[this.scene] && this.scenes[this.scene].enter) {
+      this.scenes[this.scene].enter();
+    }
   };
   
   mgr.showScene(WelcomeScene);
@@ -130,12 +137,8 @@ function mousePressed() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  if (mgr.scene.windowResized) {
+  // Check if mgr and mgr.scene exist before accessing
+  if (mgr && mgr.scene && mgr.scene.windowResized) {
     mgr.scene.windowResized();
   }
 }
-
-// Configure scene manager to call enter() on scene changes
-mgr.wire = function() {
-  this.scenes[this.scene].enter();
-};
