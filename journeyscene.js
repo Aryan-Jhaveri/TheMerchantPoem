@@ -266,7 +266,7 @@ class JourneyScene {
         const textY = sectionY + (height * 0.15);
         
         textSize(TYPOGRAPHY.TITLE.SIZE * 0.4);
-        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.7);
+        textLeading(TYPOGRAPHY.TITLE.SIZE * 0.5);
         
         text(section.text, textPadding, textY, textWidth, height * 0.8);
       }
