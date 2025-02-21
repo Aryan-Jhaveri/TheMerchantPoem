@@ -1,5 +1,3 @@
-
-
 class JourneyScene {
   constructor() {
     console.log('JourneyScene initialized');
@@ -32,6 +30,17 @@ class JourneyScene {
     this.loadedAssets = {
       moon: false
     };
+
+    // Add FloatingMerchant properties
+    this.floatingMerchant = null;
+    this.assets = {
+      ...this.assets, // Keep existing assets
+      merchantImage: null
+    };
+    this.loadedAssets = {
+      ...this.loadedAssets, // Keep existing loaded assets
+      merchant: false
+    };
   }
 
   enter() {
@@ -52,17 +61,34 @@ class JourneyScene {
       },
       (err) => console.error('Failed to load moon image:', err)
     );
+
+    // Load merchant image
+    this.assets.merchantImage = loadImage("assets/merch.png", 
+      () => {
+        console.log("Merchant image loaded successfully");
+        this.loadedAssets.merchant = true;
+        this.checkAllAssetsLoaded();
+      },
+      (err) => console.error('Failed to load merchant image:', err)
+    );
   }
 
   checkAllAssetsLoaded() {
     if (Object.values(this.loadedAssets).every(loaded => loaded)) {
       console.log("All assets loaded");
       this.setupMoon();
+      this.setupMerchant();
     }
   }
 
   setupMoon() {
     this.moon = new Moon(this.assets.moonImage);
+  }
+
+  setupMerchant() {
+    this.floatingMerchant = new FloatingImage(this.assets.merchantImage);
+    this.floatingMerchant.yoff = this.yoff;
+    this.floatingMerchant.yRange = this.yRange;
   }
 
   setup() {
@@ -252,14 +278,19 @@ class JourneyScene {
     background(0, 255);
     this.drawStarryBackground();
 
-    // Draw moon after stars but before waves
     if (this.moon) {
       this.moon.update();
       this.moon.display();
     }
 
-    this.drawWave();
     this.drawScrollingContent();
+    this.drawWave();
+
+    if (this.floatingMerchant) {
+      this.floatingMerchant.yoff = this.yoff;
+      this.floatingMerchant.update();
+      this.floatingMerchant.display();
+    }
 
     // Handle smooth scrolling with easing
     const scrollEasing = this.isSnapping ? 0.05 : 0.02;
@@ -270,13 +301,13 @@ class JourneyScene {
     }
     
     this.currentSection = floor(this.scrollY / windowHeight);
-    
-
 
     // Check if we should transition to the last scene
-    if (this.currentSection >= this.sections.length - 1 && 
-        this.scrollY >= this.totalScrollHeight - windowHeight) {
-      sceneManager.switchScene(sceneManager.scenes.LAST);
+    const isAtLastSection = this.currentSection >= this.sections.length - 1;
+    const hasScrolledPastEnd = this.scrollY > (this.sections.length - 0.7) * windowHeight;
+    
+    if (isAtLastSection && hasScrolledPastEnd) {
+        window.mgr.showScene(LastScene);
     }
   }
 
@@ -295,8 +326,18 @@ class JourneyScene {
     
     const direction = event.delta > 0 ? 1 : -1;
     let currentSection = Math.round(this.scrollY / windowHeight);
-    let targetSection = currentSection + direction;
     
+    // Check if we're at the last section and scrolling down
+    if (currentSection >= this.sections.length - 1 && direction > 0) {
+        this.targetScrollY = this.sections.length * windowHeight;
+        this.isSnapping = true;
+        setTimeout(() => {
+            window.mgr.showScene(LastScene);
+        }, 500);
+        return false;
+    }
+    
+    let targetSection = currentSection + direction;
     targetSection = constrain(targetSection, 0, this.sections.length - 1);
     this.targetScrollY = targetSection * windowHeight;
     
@@ -327,6 +368,11 @@ class JourneyScene {
 
     if (this.moon) {
       this.moon.handleResize();
+    }
+
+    // Update floating merchant if it exists
+    if (this.floatingMerchant) {
+      this.floatingMerchant.initializeProperties();
     }
   }
 
