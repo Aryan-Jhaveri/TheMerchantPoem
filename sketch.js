@@ -109,6 +109,7 @@ function createMusicControls() {
   playButton.style('padding', '5px 10px');
   playButton.style('border-radius', '3px');
   playButton.mousePressed(togglePlay);
+  playButton.touchStarted(togglePlay);
   playButton.parent(controlsDiv);
 
   // Create volume slider
@@ -116,6 +117,8 @@ function createMusicControls() {
   volumeSlider = createSlider(0, 1, 0.5, 0.01);
   volumeSlider.style('width', '100px');
   volumeSlider.input(updateVolume);
+  volumeSlider.touchStarted(handleSliderTouch);
+  volumeSlider.touchMoved(handleSliderTouch);
   volumeSlider.parent(controlsDiv);
 }
 
@@ -191,12 +194,26 @@ function windowResized() {
   }
 }
 
+// Add these new functions for handling touch on slider
+function handleSliderTouch(event) {
+  event.preventDefault();
+  updateVolume();
+  return false;
+}
+
+// Update the touchStarted function to handle both button and slider
 function touchStarted(event) {
+  // Check if touch is on music controls
+  const musicControls = select('#music-controls').elt;
+  if (musicControls && musicControls.contains(event.target)) {
+    // Allow touch events for music controls
+    return true;
+  }
+  
   if (touches.length > 0) {
     touchStartY = touches[0].y;
     lastTouchY = touches[0].y;
     
-    // Route touch as mouse press for buttons/interactions
     if (mgr && mgr.scene) {
       const actualScene = mgr.scene.oScene;
       if (typeof actualScene.mousePressed === 'function') {
@@ -207,7 +224,15 @@ function touchStarted(event) {
   return false;
 }
 
+// Update touchMoved to allow slider interaction
 function touchMoved(event) {
+  // Check if touch is on music controls
+  const musicControls = select('#music-controls').elt;
+  if (musicControls && musicControls.contains(event.target)) {
+    event.preventDefault();
+    return true;
+  }
+
   event.preventDefault();
   
   if (!touchStartY) return false;
@@ -217,12 +242,10 @@ function touchMoved(event) {
     const currentTouchY = touches[0].y;
     const touchDelta = lastTouchY - currentTouchY;
     
-    // If movement is small, don't trigger scroll
     if (Math.abs(touchDelta) <= 5) {
       return false;
     }
     
-    // Handle scroll
     if (typeof actualScene.mouseWheel === 'function') {
       const touchEvent = {
         delta: touchDelta

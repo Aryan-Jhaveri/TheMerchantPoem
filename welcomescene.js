@@ -582,22 +582,32 @@ class WelcomeScene {
     fill(TYPOGRAPHY.TITLE.COLOR);
     textAlign(CENTER, CENTER);
     textFont(this.font);
-    textSize(TYPOGRAPHY.TITLE.SIZE);
-    textLeading(TYPOGRAPHY.TITLE.SIZE * TYPOGRAPHY.TITLE.LEADING);
     
-    // Add gentle floating motion to title
+    // Get responsive font size based on window width
+    let titleSize;
+    if (windowWidth <= BREAKPOINTS.MOBILE) {
+      titleSize = TYPOGRAPHY.TITLE.SIZE.MOBILE;
+    } else if (windowWidth <= BREAKPOINTS.TABLET) {
+      titleSize = TYPOGRAPHY.TITLE.SIZE.TABLET;
+    } else {
+      titleSize = TYPOGRAPHY.TITLE.SIZE.DESKTOP;
+    }
+    
+    textSize(titleSize);
+    textLeading(titleSize * TYPOGRAPHY.TITLE.LEADING);
+    
+    // Rest of your title drawing code...
     const titleY = this.canvash / 3 + sin(frameCount * 0.02) * 5;
     
-    // Add subtle text shadow for depth
     this.drawTextWithShadow(
       "The Merchant Poem",
       this.canvasw / 2,
       titleY,
-      color(0, 0, 0, 100),  // Shadow color
-      2                      // Shadow offset
+      color(0, 0, 0, 100),
+      2
     );
     pop();
-  }
+}
 
   /**
  * Draw the start button

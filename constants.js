@@ -28,11 +28,22 @@ const VISUAL_SETTINGS = {
   }
 };
 
+// Add breakpoints
+const BREAKPOINTS = {
+  MOBILE: 480,
+  TABLET: 768,
+  DESKTOP: 1024
+};
+
 // Typography settings
 const TYPOGRAPHY = {
   TITLE: {
     FONT: 'Jacquard12',
-    SIZE: 64,
+    SIZE: {
+      MOBILE: 32,    // Smaller size for mobile
+      TABLET: 48,    // Medium size for tablet
+      DESKTOP: 64    // Original size for desktop
+    },
     LEADING: 1.2,
     COLOR: '#FFFFFF'
   },
