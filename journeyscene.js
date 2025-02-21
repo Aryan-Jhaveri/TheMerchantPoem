@@ -105,7 +105,8 @@ class JourneyScene {
             text: "I take after my forefathers of the lush gardens of hind,\n" +
                 "And my blood takes after my seafaring grand uncles that sold merch's;\n" +
                 "They gifted me with the wisdom to find all that is diplomatic,\n" +
-                "and with the sight to see at all our world's opportunities,",
+                "and with the sight to see at all our world's opportunities,\n" +
+                "\n{Swipe down}",
             yPos: 0
         },
         {
