@@ -55,16 +55,22 @@ function setup() {
   mgr = new SceneManager();
   window.mgr = mgr;
 
-  // Add scenes only after they're loaded
-  if (window.welcomeScene) mgr.addScene(WelcomeScene);
-  if (window.journeyScene) mgr.addScene(JourneyScene);
-  if (window.lastScene) mgr.addScene(LastScene);
+  // Add scenes
+  mgr.addScene(WelcomeScene);
+  mgr.addScene(JourneyScene);
+  mgr.addScene(LastScene);
 
-  // Configure scene manager to call enter() on scene changes
+  // Wire up the scene manager
   mgr.wire = function() {
-    if (this.scenes[this.scene] && this.scenes[this.scene].enter) {
-      this.scenes[this.scene].enter();
-    }
+      if (this.scene) {
+          console.log('Wiring scene:', this.scene.constructor.name);
+          // Bind all p5 methods to the scene
+          Reflect.ownKeys(this.scene).forEach(method => {
+              if (typeof this.scene[method] === 'function') {
+                  this.scene[method] = this.scene[method].bind(this.scene);
+              }
+          });
+      }
   };
   
   mgr.showScene(WelcomeScene);
@@ -133,6 +139,23 @@ function draw() {
 
 function mousePressed() {
   mgr.mousePressed();
+}
+
+function mouseWheel(event) {
+  console.log('Main mouseWheel event received', event.delta);
+  if (mgr && mgr.scene) {
+    const actualScene = mgr.scene.oScene;  // Get the actual scene instance
+    console.log('Current scene:', actualScene.constructor.name);
+    console.log('Scene methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(actualScene)));
+    
+    if (typeof actualScene.mouseWheel === 'function') {
+      console.log('Found mouseWheel handler, calling it');
+      return actualScene.mouseWheel(event);
+    } else {
+      console.log('Scene has no mouseWheel handler');
+    }
+  }
+  return true;
 }
 
 function windowResized() {

@@ -1,9 +1,19 @@
-
 class JourneyScene {
   constructor() {
+    console.log('JourneyScene initialized');
     // Add stars array
     this.stars = [];
-  }
+    
+    // Add new properties for scrolling
+    this.currentSection = 0;
+    this.scrollY = 0;
+    this.targetScrollY = 0;
+    this.sections = [];
+    this.isDesktopView = window.innerWidth > 768;
+    this.isSnapping = false;
+    this.snapTarget = 0;
+    this.totalScrollHeight = 0;
+}
 
   preload() {
     // Add any asset preloading here
@@ -11,9 +21,126 @@ class JourneyScene {
 
   setup() {
     createCanvas(windowWidth, windowHeight);
-    // Initialize stars
     this.initializeStars();
+    this.setupSections();
+    this.isDesktopView = window.innerWidth > 768;
   }
+
+  // Poetry Sections
+  setupSections() {
+    this.sections = [
+        {
+            text: "I take after my forefathers of the lush gardens of hind,\n" +
+                "And my blood takes after my seafaring grand uncles that sold merch's;\n" +
+                "They gifted me with the wisdom to find all that is diplomatic,\n" +
+                "and with the sight to see at all our world's opportunities,",
+            yPos: 0
+        },
+        {
+            text: "I hope to see more green, and more blue,\n" +
+                "Hope our kins' minds and health are freed,",
+            yPos: windowHeight
+        },
+        {
+            text: "But I am disappointed in this world's bright red hue,\n" +
+                "And it's archaic autocrats,\n" +
+                "With their crowns shining it's zirconium streak,",
+            yPos: windowHeight * 2
+        },
+        {
+            text: "My land's grandmother paralyzes me in my slumber,\n" +
+                "She's there, as I try to to fight the images of wars,\n" +
+                "As I hope to bargain for some peace in my sleep.\n\n" +
+                "But I see my stubbornness in her,\n" +
+                "I see her going through my drawers and stash,\n" +
+                "Frantically even, I see her balancing my sheets,",
+            yPos: windowHeight * 3
+        },
+        {
+            text: "Her cold face cannot hide her paranoia,\n" +
+                "Her forehead and neck failing to contain her sweat,\n" +
+                "That loving phantom is funnily scared much like me,\n" +
+                "My crystal image, in her, I see.",
+            yPos: windowHeight * 4
+        },
+        {
+            text: "She's worried if I am keeping my stomach fed and my back warm,\n" +
+                "warm is her demeanour usually,\n\n" +
+                "But she started seething when I turned 23.\n" +
+                "\"23?!\", \"Ba-trees?!\"",
+            yPos: windowHeight * 5
+        },
+        {
+            text: "\"You better be planting those trees when your on my sister's land,\n" +
+                "Turtle island blemished with the their greedy plans;\n" +
+                "Pillaged my nephews and nieces,\n" +
+                "Under the guise of the ol' divine providence;\n" +
+                "They killed her kin with no remorse," +
+                "and I haven't seen my sister's weeping stop ever since\"",
+            yPos: windowHeight * 6
+        },
+        {
+            text: "She's telling me to be humble\n" +
+                "She's yelling at me to do better,",
+            yPos: windowHeight * 7
+        },
+        {
+            text: "Get a kevlar, graphite or carbon leaded fibres covering my spinal,\n" +
+                "\"Better now!\" she thinks, -\n" +
+                "Learnt from the cycles of the eons, she's seen,\n" +
+                "before she too has to see my head anchored off my body,\n" +
+                "chopped, and rolling down some random hill\n", //+
+                //"victim again of the fanatics of the world",
+            yPos: windowHeight * 8
+        },
+        {
+            text: "She's telling me about about Dara Shikoh,\n" +
+                "Shankracharya and Rumi;\n" +
+                "Twisting my neck; She's stretching my ears,\n" +
+                "From acroos the world, and back to the East,\n" +
+                "So I don't discriminate against Tzu, and Han's Philosophies,",
+            yPos: windowHeight * 9
+        },
+        {
+            text: "She's telling me to be humble when Bakr calls me a Blasphemer,\n" +
+                "And Augustine labels me a Heretic,\n" +
+                "\"Don't take it to heart, that's not what matters\",\n" +
+                "You need their vision and wisdom, don't discriminate with good data,\n" +
+                "The good ideas,\n" +
+                "Good morals,\n" +
+                "Good will,\n" +
+                "and the good Ethics,\n" +
+                "Be it Christ, Vishnu, Buddha,\n" +
+                "or through the One for whom the whole world wishes bundles of peace.",
+            yPos: windowHeight * 10
+        },
+        {
+            text: "Bow down your bony occipital,\n" +
+                "Don't rush to judge all of our global wisdom,\n" +
+                "Let it through your top that I know is thick,\n\n" +
+                "She's telling me..\n\n" +
+                "She's telling me to be humble\n" +
+                "She's yelling at me to do better,\n" +
+                "Cover my neck, and balance me sheets,\n" +
+                "\"Never stop that education !\"\n" +
+                "Just so I can make arrangements for my own personal peace.",
+            yPos: windowHeight * 11
+        },
+        {
+            text: "Be it dusty leather bond books,\n" +
+                "Or Einstein's and Curie's papers about this world as they See.",
+            yPos: windowHeight * 12
+        },
+        {
+            text: "She's telling me to be humble\n" +
+                "She's yelling at me to do better,\n" +
+                "Cover my neck, and balance my sheets,\n" +
+                "\"Never stop that education !\"\n" +
+                "Just so I can make arrangements for my own personal peace.",
+            yPos: windowHeight * 13
+        }
+    ];
+}
 
   // Add star initialization method
   initializeStars() {
@@ -30,25 +157,117 @@ class JourneyScene {
     });
   }
 
-  draw() {
-    background(0, 45);
-    // Draw starry background
-    this.drawStarryBackground();
+  drawScrollingContent() {
+    push();
+    resetMatrix(); // Reset any transformations
+    translate(0, -this.scrollY);  // Apply scroll offset
     
-    // Draw scene elements
-    fill(255);
-    textAlign(CENTER, CENTER);
-    text("Journey Scene - Coming Soon", width/2, height/2);
-    textFont("Jacquard12");
+    this.sections.forEach((section, index) => {
+      let sectionY = index * windowHeight; // Use windowHeight for consistent section heights
+      
+      // Only draw if section is in view
+      if (sectionY + windowHeight < this.scrollY - windowHeight || 
+          sectionY > this.scrollY + windowHeight * 2) {
+        return;
+      }
+      
+      if (this.isDesktopView) {
+        // Desktop: Split screen
+        // First draw the image placeholder on the left
+        fill(40);
+        color(0, 0, 100);
+        rect(0, sectionY, width/2, height);  // Changed from width/2 to 0 for left side
+        
+        // Then draw text on the right
+        fill(255);
+        noStroke();
+        textAlign(LEFT, CENTER);
+        textSize(24);
+        text(section.text, width/2 + 50, sectionY + height/2, width/2 - 100);  // Changed starting x position to width/2 + 50
+      } else {
+        // Mobile: Stacked layout
+        // Image area on top
+        fill(40);
+        rect(0, sectionY, width, height/2);
+        
+        // Text area below
+        fill(255);
+        noStroke();
+        textAlign(LEFT, TOP);
+        textSize(24);
+
+        // Calculate text position in bottom half
+        const textPadding = 70; // Padding from top of bottom half
+        const textX = 40;
+        const textY = sectionY + height/2 + textPadding;
+        const textWidth = width - 100;
+
+        text(section.text, 50, sectionY + height/2, width - 100);
+      }
+    });
+    pop();
+  }
+
+  draw() {
+    background(0, 255);
+    this.drawStarryBackground();
+
+    // Handle smooth scrolling with easing
+    const scrollEasing = this.isSnapping ? 0.05 : 0.02;
+    this.scrollY = lerp(this.scrollY, this.targetScrollY, scrollEasing);
+    
+    if (Math.abs(this.scrollY - this.targetScrollY) < 0.1) {
+        this.scrollY = this.targetScrollY;
+    }
+    
+    this.currentSection = floor(this.scrollY / windowHeight);
+    
+    this.drawScrollingContent();
+
+    // Check if we should transition to the last scene
+    if (this.currentSection >= this.sections.length - 1 && 
+        this.scrollY >= this.totalScrollHeight - windowHeight) {
+      sceneManager.switchScene(sceneManager.scenes.LAST);
+    }
   }
 
   mousePressed() {
     // Handle mouse interactions
   }
 
+  mouseWheel(event) {
+    if (this.isSnapping) {
+        return false;
+    }
+    
+    if (Math.abs(event.delta) < 10) {
+        return false;
+    }
+    
+    const direction = event.delta > 0 ? 1 : -1;
+    let currentSection = Math.round(this.scrollY / windowHeight);
+    let targetSection = currentSection + direction;
+    
+    targetSection = constrain(targetSection, 0, this.sections.length - 1);
+    this.targetScrollY = targetSection * windowHeight;
+    
+    this.isSnapping = true;
+    setTimeout(() => {
+        this.isSnapping = false;
+    }, 950);
+    
+    return false;
+  }
+
   windowResized() {
     resizeCanvas(windowWidth, windowHeight);
-    // Update stars on resize
     this.stars.forEach(star => star.handleResize());
+    this.isDesktopView = window.innerWidth > 768;
+    this.totalScrollHeight = this.sections.length * windowHeight;
+    
+    // Adjust scroll position for new window size
+    const currentSection = Math.floor(this.scrollY / windowHeight);
+    this.scrollY = currentSection * windowHeight;
+    this.targetScrollY = this.scrollY;
   }
 } 
