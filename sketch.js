@@ -10,12 +10,23 @@ function preload() {
   backgroundMusic = loadSound('public/Life of Pi.mp3', 
     () => {
       console.log("Music loaded successfully");
-      // Start playing automatically
-      backgroundMusic.setVolume(0.5);
-      backgroundMusic.loop();
-      isPlaying = true;
-      if (playButton) {
-        playButton.html('❚❚'); // Update button to show pause symbol
+      // Add user interaction check
+      if (getAudioContext().state !== 'running') {
+        getAudioContext().resume().then(() => {
+          backgroundMusic.setVolume(0.5); 
+          backgroundMusic.loop();
+          isPlaying = true;
+          if (playButton) {
+            playButton.html('❚❚');
+          }
+        });
+      } else {
+        backgroundMusic.setVolume(0.5);
+        backgroundMusic.loop();
+        isPlaying = true;
+        if (playButton) {
+          playButton.html('❚❚');
+        }
       }
     },
     (error) => {
@@ -40,11 +51,14 @@ function setup() {
   mgr = new SceneManager();
   window.mgr = mgr;
 
-  // Add scenes
-  mgr.wire();
   mgr.addScene(WelcomeScene);
   mgr.addScene(JourneyScene);
   mgr.addScene(LastScene);
+
+  // Configure scene manager to call enter() on scene changes
+  mgr.wire = function() {
+    this.scenes[this.scene].enter();
+  };
   
   mgr.showScene(WelcomeScene);
 }
@@ -64,9 +78,9 @@ function createMusicControls() {
   controlsDiv.id('music-controls');
 
   // Create title text
-  const titleSpan = createSpan('Life of Pi');
+  const titleSpan = createSpan('Life of Pi - A.Jhaveri');
   titleSpan.style('color', 'white');
-  titleSpan.style('font-family', 'Arial');
+  titleSpan.style('font-family', 'Jacquard12');
   titleSpan.style('margin-right', '10px');
   titleSpan.parent(controlsDiv);
 
@@ -82,6 +96,7 @@ function createMusicControls() {
   playButton.parent(controlsDiv);
 
   // Create volume slider
+  // Create volume slider with range 0-1, starting value 0.5, and step size 0.01
   volumeSlider = createSlider(0, 1, 0.5, 0.01);
   volumeSlider.style('width', '100px');
   volumeSlider.input(updateVolume);

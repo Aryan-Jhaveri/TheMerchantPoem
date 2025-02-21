@@ -274,6 +274,11 @@ class WelcomeScene {
     this.preload();
   }
 
+
+/**
+ * Preload all required assets
+ * This function runs before setup() and ensures all assets are loaded
+ */  
   preload() {
     const handleImageError = (err) => {
       console.error('Failed to load image:', err);
@@ -328,7 +333,10 @@ class WelcomeScene {
       this.setup();
     }
   }
-
+/**
+ * Initialize the canvas and all visual elements
+ * This function runs after preload() when all assets are ready
+ */
   setup() {
     this.canvasw = windowWidth;
     this.canvash = windowHeight;
@@ -346,6 +354,10 @@ class WelcomeScene {
     this.floatingMerchant.yRange = this.yRange;
   }
 
+  /**
+ * Draw the welcome scene
+ * This function is called on every frame and handles the drawing of all elements
+ */
   draw() {
     background(0, 45);
     
@@ -387,12 +399,20 @@ class WelcomeScene {
     this.drawStartButton();
   }
 
+  /**
+ * Initialize the stars
+ * This function creates the star objects and adds them to the stars array
+ */
   initializeStars() {
     for (let i = 0; i < VISUAL_SETTINGS.STAR_COUNT; i++) {
       this.stars.push(new Star());
     }
   }
 
+  /**
+ * Initialize the interface elements
+ * This function calculates the button dimensions and updates the button position
+ */
   initializeInterface() {
     this.buttonWidth = min(this.canvasw * VISUAL_SETTINGS.CANVAS.BUTTON_WIDTH_PERCENT, 
                      VISUAL_SETTINGS.CANVAS.MAX_BUTTON_WIDTH);
@@ -401,6 +421,10 @@ class WelcomeScene {
     this.updateButtonPosition();
   }
 
+  /**
+ * Initialize the clouds
+ * This function creates the cloud objects and adds them to the clouds array
+ */
   setupClouds() {
     this.clouds = [];  // Reset clouds array
     for (let i = 0; i < this.assets.cloudImages.length * 3; i++) {
@@ -411,6 +435,10 @@ class WelcomeScene {
     }
   }
 
+  /**
+ * Draw the starry background
+ * This function updates and displays all stars
+ */
   drawStarryBackground() {
     this.stars.forEach(star => {
       star.update();
@@ -418,6 +446,10 @@ class WelcomeScene {
     });
   }
 
+  /**
+ * Draw the clouds
+ * This function updates and displays all clouds
+ */
   drawClouds() {
     if (this.clouds && this.clouds.length > 0) {
       this.clouds.forEach(cloud => {
@@ -427,6 +459,10 @@ class WelcomeScene {
     }
   }
 
+  /**
+ * Draw the ocean waves
+ * This function updates and displays the ocean waves
+ */
   drawWave() {
     const t = frameCount * 0.0003; // Time variable for texture animation
     
@@ -476,13 +512,27 @@ class WelcomeScene {
     this.yoff += VISUAL_SETTINGS.WAVE.Y_INCREMENT;
   }
 
-  mousePressed() {
+  /**
+ * Add wave texture to the wave shape
+ * This function adds a pixelated texture to the wave shape
+ */
+  addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
+    const pixelSize = 20;
+    
     if (this.isMouseOverButton()) {
       // Change scene when button is clicked
       window.mgr.showScene(JourneyScene);
     }
   }
 
+/**
+ * Adds pixelated texture effect to the wave
+ * @param {Array} wavePoints - Array of wave vertex positions
+ * @param {p5.Color} waveColor - Base color of the wave
+ * @param {number} alpha - Opacity value
+ * @param {number} t - Time variable for animation
+ * @param {number} waveIndex - Current wave layer index
+ */
   addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
     const pixelSize = 20;
     
@@ -522,6 +572,10 @@ class WelcomeScene {
     }
   }
 
+  /**
+ * Draw the title
+ * This function draws the title text with gentle floating motion
+ */
   drawTitle() {
     push();
     // Set text properties
@@ -545,6 +599,10 @@ class WelcomeScene {
     pop();
   }
 
+  /**
+ * Draw the start button
+ * This function draws the start button with hover effect
+ */
   drawStartButton() {
     push();
     const buttonHover = this.isMouseOverButton();
@@ -571,6 +629,10 @@ class WelcomeScene {
     pop();
   }
 
+  /**
+ * Draw text with shadow effect
+ * This function draws text with a subtle shadow effect
+ */
   drawTextWithShadow(txt, x, y, shadowColor, offset) {
     // Draw shadow
     fill(shadowColor);
@@ -581,37 +643,66 @@ class WelcomeScene {
     text(txt, x, y);
   }
 
+  /**
+ * Check if the mouse is over the start button
+ * This function returns true if the mouse is over the start button
+ */
   isMouseOverButton() {
     return mouseX > this.startButtonX &&
            mouseX < this.startButtonX + this.buttonWidth &&
            mouseY > this.startButtonY &&
            mouseY < this.startButtonY + this.buttonHeight;
   }
-  
+
+  /**
+ * Handle mouse pressed events
+ * This function checks if the mouse is over the start button and changes scene when clicked
+ */
+  mousePressed() {
+    // Check if mouse is over the button when clicked
+    if (this.isMouseOverButton()) {
+      // Change scene when button is clicked
+      window.mgr.showScene(JourneyScene);
+    }
+  }
+
+  /**
+ * Update the position of the start button
+ * This function updates the position of the start button
+ */
   updateButtonPosition() {
     this.startButtonX = this.canvasw / 2 - this.buttonWidth / 2;
     this.startButtonY = this.canvash / 2 - this.buttonHeight / 2;
   }
 
+  /**
+ * Update the canvas dimensions when the window is resized
+ * This function updates the canvas dimensions and all responsive elements
+ */
   windowResized() {
-    // Update the existing windowResized function with 'this' references
+    // Update canvas dimensions
     this.canvasw = windowWidth;
     this.canvash = windowHeight;
     resizeCanvas(this.canvasw, this.canvash);
     
+    // Update all responsive elements
     this.stars.forEach(star => star.handleResize());
     this.clouds.forEach(cloud => cloud.handleResize());
     this.moon.handleResize();
     
+    // Update interface elements
     this.buttonWidth = min(this.canvasw * VISUAL_SETTINGS.CANVAS.BUTTON_WIDTH_PERCENT,
-                     VISUAL_SETTINGS.CANVAS.MAX_BUTTON_WIDTH);
+                    VISUAL_SETTINGS.CANVAS.MAX_BUTTON_WIDTH);
     this.buttonHeight = min(this.canvash * VISUAL_SETTINGS.CANVAS.BUTTON_HEIGHT_PERCENT,
                       VISUAL_SETTINGS.CANVAS.MAX_BUTTON_HEIGHT);
     this.updateButtonPosition();
     
+    // Update wave boundaries
     this.yRange = {
       min: this.canvash * 0.6,
       max: this.canvash * 0.8
     };
   }
+
+
 } 
