@@ -331,34 +331,38 @@ function mouseWheel(event) {
  * @returns {boolean} Whether the current viewport is tablet
  */
 function getMenuConfig() {
+  // Base size calculations
+  const baseButtonWidth = Math.min(windowWidth * 0.15, 200); // Max width of 200px
+  const baseFontSize = Math.min(windowWidth * 0.015, 24); // Max font size of 24px
+  
   const config = {
     mobile: {
-      topOffset: windowHeight * 0.05,    // 5% from top
+      topOffset: windowHeight * 0.02,    // 2% from top
       leftOffset: windowWidth * 0.02,    // 2% from left
-      buttonWidth: windowWidth * 0.50, 
-      fontSize: '50px',
-      padding: '8px 15px',
+      buttonWidth: Math.min(windowWidth * 0.25, 120), // Smaller buttons for mobile
+      fontSize: Math.min(windowWidth * 0.03, 18) + 'px', // Proportional but capped
+      padding: '8px 12px',
       direction: 'row',
-      gap: '5px'
+      gap: '8px'
     },
     tablet: {
-      topOffset: windowHeight * 0.08,    // 8% from top
-      leftOffset: windowWidth * 0.03,    // 3% from left
-      buttonWidth: windowWidth * 0.50,
-      fontSize: '15px',
-      padding: '10px 20px',
-      direction: 'column',
-      gap: '10px'
+      topOffset: windowHeight * 0.03,    // 3% from top
+      leftOffset: windowWidth * 0.02,    // 2% from left
+      buttonWidth: baseButtonWidth * 1.2, // Slightly larger than base
+      fontSize: baseFontSize + 'px',
+      padding: '10px 15px',
+      direction: 'row',
+      gap: '12px'
     },
     
     desktop: {
       topOffset: windowHeight * 0.03,    // 3% from top
       leftOffset: windowWidth * 0.02,    // 2% from left
-      buttonWidth: windowWidth * 0.50,
-      fontSize: '50px',
-      padding: '10px 20px',
+      buttonWidth: baseButtonWidth,
+      fontSize: baseFontSize + 'px',
+      padding: '12px 20px',
       direction: 'row',
-      gap: '10px'
+      gap: '15px'
     }
   };
 
