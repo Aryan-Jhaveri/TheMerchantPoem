@@ -15,7 +15,7 @@ let resourcesButton;
 let menuDiv;
 
 /**
- * Breakpoints for responsive design
+ * Preload
  */
 function preload() {
   // Load the font
@@ -59,6 +59,13 @@ function preload() {
   
 }
 
+// Helper function to determine current device type
+function getDeviceType() {
+  if (windowWidth <= BREAKPOINTS.MOBILE) return 'MOBILE';
+  if (windowWidth <= BREAKPOINTS.TABLET) return 'TABLET';
+  return 'DESKTOP';
+}
+
 /**
  * Create menu buttons with responsive layout
  */
@@ -67,96 +74,39 @@ function createMenuButtons() {
   menuDiv = createDiv('');
   menuDiv.style('position', 'fixed');
   menuDiv.style('display', 'flex');
-  menuDiv.style('z-index', '1000'); 
+  menuDiv.style('z-index', '1000');
   menuDiv.id('menu-buttons');
-
-  // Calculate initial positions based on window dimensions
-  let topOffset, leftOffset, direction;
-  
-  if (windowWidth <= BREAKPOINTS.MOBILE) {
-    topOffset = windowHeight * 0.01;  // 5% from top
-    leftOffset = windowWidth * 0.02;  // 2% from left
-    direction = 'row';
-  } else { //DESKTOP
-    topOffset = windowHeight * 0.03;  // 3% from top
-    leftOffset = windowWidth * 0.02;  // 2% from left
-    direction = 'row';
-  }
-
-  // Apply calculated positions and layout
-  menuDiv.style('top', topOffset + 'px');
-  menuDiv.style('left', leftOffset + 'px');
-  menuDiv.style('flex-direction', direction);
-
-  // Base button style that won't change with screen size
-  const buttonStyle = {
-    'font-family': 'Jacquard12-Regular',
-    'background': 'rgba(0, 0, 0, 0.5)',
-    'color': 'white',
-    'border': '1px solid white',
-    'cursor': 'pointer',
-    'border-radius': '5px',
-    'text-align': 'center',
-    'transition': 'all 0.3s ease'
-  };
-
-  // Initial positioning and responsive styles will be set by updateMenuPosition
-  this.updateMenuPosition()
 
   // Function to handle scene switching with cleanup
   const switchScene = (SceneClass) => {
-    // If there's a current scene with an exit method, call it
     if (mgr.scene && mgr.scene.oScene && typeof mgr.scene.oScene.exit === 'function') {
       mgr.scene.oScene.exit();
     }
-
-    // Clear the canvas before switching scenes
     clear();
-    
-    // Show the new scene
     mgr.showScene(SceneClass);
   };
 
-  // Function to create a button with both mouse and touch handlers
+  // Function to create a scene button with both mouse and touch handlers
   function createSceneButton(label, targetScene) {
-    const button = createButton(label);
-    
-    // Mouse click handler
-    button.mousePressed(() => switchScene(targetScene));
-    
-    // Touch handlers
-    button.touchStarted(() => {
-      switchScene(targetScene);
-      return false; // Prevent default touch behavior
+    const btn = createButton(label);
+    Object.entries(BUTTON_STYLE).forEach(([key, value]) => {
+      btn.style(key, value);
     });
-    
-    // Add touch ended to prevent any lingering touch issues
-    button.touchEnded(() => false);
-    
-    return button;
+    btn.mousePressed(() => switchScene(targetScene));
+    btn.touchStarted(() => switchScene(targetScene));
+    btn.parent(menuDiv);
+    return btn;
   }
 
-  // Create buttons with both mouse and touch handlers
+  // Create the buttons
   homeButton = createSceneButton('Home', WelcomeScene);
   poemButton = createSceneButton('Poem', JourneyScene);
   resourcesButton = createSceneButton('Resources', LastScene);
 
-  const buttons = [homeButton, poemButton, resourcesButton];
-  buttons.forEach(button => {
-    button.parent(menuDiv);
-    Object.entries(buttonStyle).forEach(([property, value]) => {
-      button.style(property, value);
-    });
-
-    // Add hover effect
-    button.mouseOver(() => {
-      button.style('background-color', 'rgba(255, 255, 255, 0.2)');
-    });
-    button.mouseOut(() => {
-      button.style('background-color', 'rgba(0, 0, 0, 0.5)');
-    });
-  });
+  // Initial position update
+  updateMenuPosition();
 }
+
 
 /**
  * Setup the sketch
@@ -331,44 +281,18 @@ function mouseWheel(event) {
  * @returns {boolean} Whether the current viewport is tablet
  */
 function getMenuConfig() {
-  // Base size calculations
-  const baseButtonWidth = Math.min(windowWidth * 0.15, 200); // Max width of 200px
-  const baseFontSize = Math.min(windowWidth * 0.015, 24); // Max font size of 24px
+  const baseButtonWidth = Math.min(windowWidth * 0.25, 5000); // Max width
+  const baseFontSize = Math.min(windowWidth * 0.15, 24); // Max font size
   
-  const config = {
-    mobile: {
-      topOffset: windowHeight * 0.02,    // 2% from top
-      leftOffset: windowWidth * 0.02,    // 2% from left
-      buttonWidth: Math.min(windowWidth * 0.25, 120), // Smaller buttons for mobile
-      fontSize: Math.min(windowWidth * 0.03, 18) + 'px', // Proportional but capped
-      padding: '8px 12px',
-      direction: 'row',
-      gap: '8px'
-    },
-    tablet: {
-      topOffset: windowHeight * 0.03,    // 3% from top
-      leftOffset: windowWidth * 0.02,    // 2% from left
-      buttonWidth: baseButtonWidth * 1.2, // Slightly larger than base
-      fontSize: baseFontSize + 'px',
-      padding: '10px 15px',
-      direction: 'row',
-      gap: '12px'
-    },
-    
-    desktop: {
-      topOffset: windowHeight * 0.03,    // 3% from top
-      leftOffset: windowWidth * 0.02,    // 2% from left
-      buttonWidth: baseButtonWidth,
-      fontSize: baseFontSize + 'px',
-      padding: '12px 20px',
-      direction: 'row',
-      gap: '15px'
-    }
+  return {
+    topOffset: windowHeight * 0.03,       // 3% from top
+    leftOffset: windowWidth * 0.02,       // 2% from left
+    buttonWidth: baseButtonWidth,         // Base button width for desktop
+    fontSize: baseFontSize + 'px',         // Base font size for desktop
+    padding: '12px 20px',                 // Button padding
+    direction: 'row',                     // Layout direction
+    gap: '15px'                           // Gap between buttons
   };
-
-  if (windowWidth <= BREAKPOINTS.MOBILE) return config.mobile;
-  if (windowWidth <= BREAKPOINTS.TABLET) return config.tablet;
-  return config.desktop;
 }
 
 /*
@@ -377,23 +301,30 @@ function getMenuConfig() {
 function updateMenuPosition() {
   if (!menuDiv) return;
 
-  const config = getMenuConfig();
+  const deviceType = getDeviceType();
+  
+  // Calculate dimensions based on device type and window size
+  const buttonWidth = Math.min(
+    windowWidth * MENU_CONFIG.BUTTON.WIDTH_PERCENTAGE[deviceType],
+    MENU_CONFIG.BUTTON.MAX_WIDTH[deviceType]
+  );
 
   // Update menu container
-  menuDiv.position(config.leftOffset, config.topOffset);
-  menuDiv.style('flex-direction', config.direction);
-  menuDiv.style('gap', config.gap);
+  menuDiv.position(
+    windowWidth * MENU_CONFIG.POSITION.LEFT_OFFSET_PERCENTAGE,
+    windowHeight * MENU_CONFIG.POSITION.TOP_OFFSET_PERCENTAGE
+  );
+  menuDiv.style('gap', MENU_CONFIG.BUTTON.GAP[deviceType]);
 
-  // Update button styles
+  // Update all buttons
   [homeButton, poemButton, resourcesButton].forEach(button => {
     if (button) {
-      button.style('width', config.buttonWidth);
-      button.style('font-size', config.fontSize);
-      button.style('padding', config.padding);
+      button.style('width', `${buttonWidth}px`);
+      button.style('font-size', `${MENU_CONFIG.BUTTON.FONT_SIZE[deviceType]}px`);
+      button.style('padding', MENU_CONFIG.BUTTON.PADDING[deviceType]);
     }
   });
 }
-
 /**
  * Handle window resizing
  */

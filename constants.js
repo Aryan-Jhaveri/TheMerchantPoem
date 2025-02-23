@@ -60,3 +60,50 @@ const TYPOGRAPHY = {
     COLOR: '#FFFFFF'
   }
 }; 
+
+// Centralized menu configuration
+const MENU_CONFIG = {
+  BUTTON: {
+    WIDTH_PERCENTAGE: {
+      MOBILE: 0.25,    // 25% of screen width on mobile
+      TABLET: 0.15,    // 15% of screen width on tablet
+      DESKTOP: 0.05    // 5% of screen width on desktop
+    },
+    MAX_WIDTH: {
+      MOBILE: 150,     // Max width in pixels for mobile
+      TABLET: 175,     // Max width in pixels for tablet
+      DESKTOP: 200     // Max width in pixels for desktop
+    },
+    FONT_SIZE: {
+      MOBILE: 16,      // Font size in pixels for mobile
+      TABLET: 18,      // Font size in pixels for tablet
+      DESKTOP: 20      // Font size in pixels for desktop
+    },
+    PADDING: {
+      MOBILE: '4px 8px',
+      TABLET: '5px 10px',
+      DESKTOP: '6px 12px'
+    },
+    GAP: {
+      MOBILE: '5px',
+      TABLET: '10px',
+      DESKTOP: '15px'
+    }
+  },
+  POSITION: {
+    TOP_OFFSET_PERCENTAGE: 0.03,
+    LEFT_OFFSET_PERCENTAGE: 0.02
+  }
+};
+
+// Base button style that won't change with screen size
+const BUTTON_STYLE = {
+  'font-family': 'Jacquard12-Regular',
+  'background': 'rgba(0, 0, 0, 0.5)',
+  'color': 'white',
+  'border': 'none',
+  'cursor': 'pointer',
+  'border-radius': '5px',
+  'text-align': 'center',
+  'transition': 'all 0.3s ease'
+};
