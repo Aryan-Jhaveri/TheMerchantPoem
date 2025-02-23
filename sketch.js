@@ -350,6 +350,7 @@ function getMenuConfig() {
       direction: 'column',
       gap: '10px'
     },
+    
     desktop: {
       topOffset: windowHeight * 0.03,    // 3% from top
       leftOffset: windowWidth * 0.02,    // 2% from left
