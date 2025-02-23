@@ -3,11 +3,21 @@ let backgroundMusic;
 let playButton;
 let volumeSlider;
 let isPlaying = false;
+let menuFont = null;
 
 let touchStartY = null;
 let lastTouchY = null;
 
+// Menu buttons
+let homeButton;
+let poemButton;
+let resourcesButton;
+let menuDiv;
+
 function preload() {
+  // Load the font
+  menuFont = loadFont('assets/Jacquard12-Regular.ttf');
+  
   // Load the music file
   soundFormats('mp3');
   backgroundMusic = loadSound('public/Life of Pi.mp3', 
@@ -46,6 +56,101 @@ function preload() {
   
 }
 
+function createMenuButtons() {
+  // Create container div for menu buttons
+  menuDiv = createDiv('');
+  menuDiv.style('position', 'fixed');
+  menuDiv.style('display', 'flex');
+  menuDiv.style('z-index', '1000'); 
+  menuDiv.id('menu-buttons');
+
+  // Calculate initial positions based on window dimensions
+  let topOffset, leftOffset, direction;
+  
+  if (windowWidth <= BREAKPOINTS.MOBILE) {
+    topOffset = windowHeight * 0.01;  // 5% from top
+    leftOffset = windowWidth * 0.02;  // 2% from left
+    direction = 'row';
+  } else {
+    topOffset = windowHeight * 0.03;  // 3% from top
+    leftOffset = windowWidth * 0.02;  // 2% from left
+    direction = 'row';
+  }
+
+  // Apply calculated positions and layout
+  menuDiv.style('top', topOffset + 'px');
+  menuDiv.style('left', leftOffset + 'px');
+  menuDiv.style('flex-direction', direction);
+
+  // Base button style that won't change with screen size
+  const buttonStyle = {
+    'font-family': 'Jacquard12-Regular',
+    'background': 'rgba(0, 0, 0, 0.5)',
+    'color': 'white',
+    'border': '1px solid white',
+    'cursor': 'pointer',
+    'border-radius': '5px',
+    'text-align': 'center',
+    'transition': 'all 0.3s ease'
+  };
+
+  // Initial positioning and responsive styles will be set by updateMenuPosition
+
+  // Function to handle scene switching with cleanup
+  const switchScene = (SceneClass) => {
+    // If there's a current scene with an exit method, call it
+    if (mgr.scene && mgr.scene.oScene && typeof mgr.scene.oScene.exit === 'function') {
+      mgr.scene.oScene.exit();
+    }
+
+    // Clear the canvas before switching scenes
+    clear();
+    
+    // Show the new scene
+    mgr.showScene(SceneClass);
+  };
+
+  // Function to create a button with both mouse and touch handlers
+  function createSceneButton(label, targetScene) {
+    const button = createButton(label);
+    
+    // Mouse click handler
+    button.mousePressed(() => switchScene(targetScene));
+    
+    // Touch handlers
+    button.touchStarted(() => {
+      switchScene(targetScene);
+      return false; // Prevent default touch behavior
+    });
+    
+    // Add touch ended to prevent any lingering touch issues
+    button.touchEnded(() => false);
+    
+    return button;
+  }
+
+  // Create buttons with both mouse and touch handlers
+  homeButton = createSceneButton('Home', WelcomeScene);
+  poemButton = createSceneButton('Poem', JourneyScene);
+  resourcesButton = createSceneButton('Resources', LastScene);
+
+  const buttons = [homeButton, poemButton, resourcesButton];
+  buttons.forEach(button => {
+    button.parent(menuDiv);
+    Object.entries(buttonStyle).forEach(([property, value]) => {
+      button.style(property, value);
+    });
+
+    // Add hover effect
+    button.mouseOver(() => {
+      button.style('background-color', 'rgba(255, 255, 255, 0.2)');
+    });
+    button.mouseOut(() => {
+      button.style('background-color', 'rgba(0, 0, 0, 0.5)');
+    });
+  });
+}
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
   // Disable device orientation and motion handling
@@ -54,6 +159,7 @@ function setup() {
   
   // Create UI controls
   createMusicControls();
+  createMenuButtons();
   
   mgr = new SceneManager();
   window.mgr = mgr;
@@ -83,14 +189,15 @@ function createMusicControls() {
   // Create container div for music controls
   const controlsDiv = createDiv('');
   controlsDiv.style('position', 'fixed');
-  controlsDiv.style('top', '20px');
-  controlsDiv.style('right', '20px');
+  controlsDiv.style('bottom', '20px');  // Position from bottom
+  controlsDiv.style('left', '20px');    // Position from left
   controlsDiv.style('display', 'flex');
   controlsDiv.style('align-items', 'center');
   controlsDiv.style('gap', '10px');
   controlsDiv.style('background', 'rgba(0, 0, 0, 0.5)');
   controlsDiv.style('padding', '10px');
   controlsDiv.style('border-radius', '5px');
+  controlsDiv.style('z-index', '1000');  // Ensure it's above other elements
   controlsDiv.id('music-controls');
 
   // Create title text
@@ -173,6 +280,7 @@ function draw() {
 }
 
 function mousePressed() {
+  // The buttons now handle their own click events
   mgr.mousePressed();
 }
 
@@ -186,15 +294,75 @@ function mouseWheel(event) {
   return true;
 }
 
+// Get responsive menu configuration based on screen size
+function getMenuConfig() {
+  const config = {
+    mobile: {
+      topOffset: windowHeight * 0.05,    // 5% from top
+      leftOffset: windowWidth * 0.02,    // 2% from left
+      buttonWidth: min(windowWidth * 0.50, 100), // 25% of width or max 100px
+      fontSize: '14px',
+      padding: '8px 15px',
+      direction: 'row',
+      gap: '5px'
+    },
+    tablet: {
+      topOffset: windowHeight * 0.08,    // 8% from top
+      leftOffset: windowWidth * 0.03,    // 3% from left
+      buttonWidth: '120px',
+      fontSize: '15px',
+      padding: '10px 20px',
+      direction: 'column',
+      gap: '10px'
+    },
+    desktop: {
+      topOffset: windowHeight * 0.03,    // 3% from top
+      leftOffset: windowWidth * 0.02,    // 2% from left
+      buttonWidth: '120px',
+      fontSize: '16px',
+      padding: '10px 20px',
+      direction: 'row',
+      gap: '10px'
+    }
+  };
+
+  if (windowWidth <= BREAKPOINTS.MOBILE) return config.mobile;
+  if (windowWidth <= BREAKPOINTS.TABLET) return config.tablet;
+  return config.desktop;
+}
+
+function updateMenuPosition() {
+  if (!menuDiv) return;
+
+  const config = getMenuConfig();
+
+  // Update menu container
+  menuDiv.position(config.leftOffset, config.topOffset);
+  menuDiv.style('flex-direction', config.direction);
+  menuDiv.style('gap', config.gap);
+
+  // Update button styles
+  [homeButton, poemButton, resourcesButton].forEach(button => {
+    if (button) {
+      button.style('width', config.buttonWidth);
+      button.style('font-size', config.fontSize);
+      button.style('padding', config.padding);
+    }
+  });
+}
+
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+  
+  // Update menu positioning
+  updateMenuPosition();
+
   // Check if mgr and mgr.scene exist before accessing
   if (mgr && mgr.scene && mgr.scene.windowResized) {
     mgr.scene.windowResized();
   }
 }
 
-// Add these new functions for handling touch on slider
 function handleSliderTouch(event) {
   event.preventDefault();
   updateVolume();
@@ -203,10 +371,12 @@ function handleSliderTouch(event) {
 
 // Update the touchStarted function to handle both button and slider
 function touchStarted(event) {
-  // Check if touch is on music controls
+  // Check if touch is on music controls or menu buttons
   const musicControls = select('#music-controls').elt;
-  if (musicControls && musicControls.contains(event.target)) {
-    // Allow touch events for music controls
+  const menuButtons = select('#menu-buttons').elt;
+  if ((musicControls && musicControls.contains(event.target)) ||
+      (menuButtons && menuButtons.contains(event.target))) {
+    // Allow touch events for music controls and menu buttons
     return true;
   }
   

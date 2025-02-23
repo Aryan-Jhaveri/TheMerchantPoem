@@ -1,6 +1,8 @@
 class LastScene {
   constructor() {
     this.stars = [];
+    this.domElements = []; // Track all created DOM elements
+    this.isActive = false; // Track if scene is currently active
     this.sections = {
       about: {
         title: "About This Project",
@@ -90,10 +92,19 @@ class LastScene {
   setup() {
     createCanvas(windowWidth, windowHeight);
     this.initializeStars();
+  }
+
+  enter() {
+    console.log('Entering LastScene...');
+    // Ensure clean slate
+    this.exit();
     
-    // Create section containers
-    this.createAboutSection();
-    this.createResourcesSection();
+    // Small delay to ensure DOM is ready
+    setTimeout(() => {
+      // Create section containers
+      this.createAboutSection();
+      this.createResourcesSection();
+    }, 50);
   }
 
   createAboutSection() {
@@ -107,16 +118,19 @@ class LastScene {
     const contentWidth = this.layout.spacing.getContentWidth();
     
     const aboutContainer = createDiv('');
+    this.domElements.push(aboutContainer); // Track the container
     aboutContainer.class('about-section');
     aboutContainer.position(position.x, position.y);
     aboutContainer.style('width', `${contentWidth * 100}%`);
     
     const aboutTitle = createElement('h2', this.sections.about.title);
+    this.domElements.push(aboutTitle); // Track the title
     aboutTitle.parent(aboutContainer);
     aboutTitle.style('color', '#ffffff');
     aboutTitle.style('font-size', `${this.styles.heading.getSize()}px`);
     
     const aboutContent = createP(this.sections.about.content);
+    this.domElements.push(aboutContent); // Track the content
     aboutContent.parent(aboutContainer);
     aboutContent.style('color', '#ffffff');
     aboutContent.style('line-height', '1.6');
@@ -134,21 +148,25 @@ class LastScene {
     const contentWidth = this.layout.spacing.getContentWidth();
     
     const resourcesContainer = createDiv('');
+    this.domElements.push(resourcesContainer); // Track container
     resourcesContainer.class('resources-section');
     resourcesContainer.position(position.x, position.y);
     resourcesContainer.style('width', `${contentWidth * 100}%`);
 
     const resourcesTitle = createElement('h2', this.sections.resources.title);
+    this.domElements.push(resourcesTitle); // Track title
     resourcesTitle.parent(resourcesContainer);
     resourcesTitle.style('color', '#ffffff');
     resourcesTitle.style('font-size', `${this.styles.heading.getSize()}px`);
 
     this.sections.resources.links.forEach(link => {
       const linkContainer = createDiv('');
+      this.domElements.push(linkContainer); // Track link container
       linkContainer.parent(resourcesContainer);
       linkContainer.style('margin-bottom', this.isMobile() ? '15px' : '20px');
 
       const a = createA(link.url, link.title);
+      this.domElements.push(a); // Track link
       a.parent(linkContainer);
       a.style('color', this.styles.link.color);
       a.style('text-decoration', 'none');
@@ -158,6 +176,7 @@ class LastScene {
       a.mouseOut(() => a.style('color', this.styles.link.color));
 
       const description = createP(link.description);
+      this.domElements.push(description); // Track description
       description.parent(linkContainer);
       description.style('color', '#ffffff');
       description.style('margin-top', '5px');
@@ -203,5 +222,24 @@ class LastScene {
     resizeCanvas(windowWidth, windowHeight);
     this.createAboutSection();
     this.createResourcesSection();
+  }
+
+  exit() {
+    console.log('Cleaning up LastScene...');
+    // Remove all tracked DOM elements
+    this.domElements.forEach(element => {
+      if (element) {
+        element.remove();
+      }
+    });
+    // Clear the tracking array
+    this.domElements = [];
+    
+    // Remove any elements that might have been missed
+    selectAll('.about-section').forEach(el => el.remove());
+    selectAll('.resources-section').forEach(el => el.remove());
+    
+    // Clear the canvas
+    clear();
   }
 }
