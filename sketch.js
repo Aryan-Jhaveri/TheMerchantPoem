@@ -71,7 +71,7 @@ function createMenuButtons() {
     topOffset = windowHeight * 0.01;  // 5% from top
     leftOffset = windowWidth * 0.02;  // 2% from left
     direction = 'row';
-  } else {
+  } else { //DESKTOP
     topOffset = windowHeight * 0.03;  // 3% from top
     leftOffset = windowWidth * 0.02;  // 2% from left
     direction = 'row';
@@ -95,6 +95,7 @@ function createMenuButtons() {
   };
 
   // Initial positioning and responsive styles will be set by updateMenuPosition
+  this.updateMenuPosition()
 
   // Function to handle scene switching with cleanup
   const switchScene = (SceneClass) => {
@@ -319,7 +320,7 @@ function getMenuConfig() {
       topOffset: windowHeight * 0.03,    // 3% from top
       leftOffset: windowWidth * 0.02,    // 2% from left
       buttonWidth: '120px',
-      fontSize: '16px',
+      fontSize: '25px',
       padding: '10px 20px',
       direction: 'row',
       gap: '10px'

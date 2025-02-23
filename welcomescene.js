@@ -1,5 +1,3 @@
-// Rename the existing sketch.js content to a class structure
-
 /**
  * Star class handles the creation and animation of individual stars in the background
  */
@@ -57,119 +55,119 @@ class Star {
       fill(255, 255, 255, this.opacity);
       ellipse(this.x, this.y, this.baseSize, this.baseSize);
     }
-  }
+}
   
 /**
  * Cloud class manages individual cloud elements, including their movement and opacity
  */
 class Cloud {
-constructor(img, speed) {
-    this.img = img;
-    this.speed = speed * 0.3;
-    this.initializeCloud();
-}
+  constructor(img, speed) {
+      this.img = img;
+      this.speed = speed * 0.3;
+      this.initializeCloud();
+  }
 
-initializeCloud() {
-    this.xPercent = random(0, 1);
-    this.yPercent = random(0, 0.4);
-    this.updateDimensions();
-    
-    // Animation properties
-    this.opacity = 0;
-    this.targetOpacity = random(300, 400);
-    this.fadeSpeed = 0.005;
-    this.ySpeed = random(0.001, 0.002);
-    this.yAmplitude = random(5, 10);
-    
-    // Lifecycle management
-    this.lifespan = random(300, 600);
-    this.age = 0;
-}
+  initializeCloud() {
+      this.xPercent = random(0, 1);
+      this.yPercent = random(0, 0.4);
+      this.updateDimensions();
+      
+      // Animation properties
+      this.opacity = 0;
+      this.targetOpacity = random(300, 400);
+      this.fadeSpeed = 0.005;
+      this.ySpeed = random(0.001, 0.002);
+      this.yAmplitude = random(5, 10);
+      
+      // Lifecycle management
+      this.lifespan = random(300, 600);
+      this.age = 0;
+  }
 
-updateDimensions() {
-    this.x = this.xPercent * windowWidth;
-    this.y = this.yPercent * windowHeight;
-    this.originalY = this.y;
-    this.width = windowWidth * 0.2;
-    this.height = this.width * 0.66;
-}
+  updateDimensions() {
+      this.x = this.xPercent * windowWidth;
+      this.y = this.yPercent * windowHeight;
+      this.originalY = this.y;
+      this.width = windowWidth * 0.2;
+      this.height = this.width * 0.66;
+  }
 
-update() {
-    this.age++;
-    this.x += this.speed;
-    this.y = this.originalY + sin(frameCount * this.ySpeed) * this.yAmplitude;
+  update() {
+      this.age++;
+      this.x += this.speed;
+      this.y = this.originalY + sin(frameCount * this.ySpeed) * this.yAmplitude;
 
-    // Handle cloud lifecycle
-    if (this.age < 60) {
-    this.opacity = lerp(this.opacity, this.targetOpacity, 0.02);
-    } else if (this.age > this.lifespan - 60) {
-    this.opacity = lerp(this.opacity, 0, 0.02);
-    }
+      // Handle cloud lifecycle
+      if (this.age < 60) {
+      this.opacity = lerp(this.opacity, this.targetOpacity, 0.02);
+      } else if (this.age > this.lifespan - 60) {
+      this.opacity = lerp(this.opacity, 0, 0.02);
+      }
 
-    if (this.age > this.lifespan || this.x > windowWidth + this.width) {
-    this.reset();
-    }
-}
+      if (this.age > this.lifespan || this.x > windowWidth + this.width) {
+      this.reset();
+      }
+  }
 
-reset() {
-    this.initializeCloud();
-}
+  reset() {
+      this.initializeCloud();
+  }
 
-handleResize() {
-    this.updateDimensions();
-}
+  handleResize() {
+      this.updateDimensions();
+  }
 
-display() {
-    push();
-    if (this.img && this.img.width > 0) {
-    tint(255, this.opacity);
-    image(this.img, this.x, this.y, this.width, this.height);
-    }
-    pop();
-}
+  display() {
+      push();
+      if (this.img && this.img.width > 0) {
+      tint(255, this.opacity);
+      image(this.img, this.x, this.y, this.width, this.height);
+      }
+      pop();
+  }
 }
 
 /**
  * Moon class handles the moon's display and gentle floating animation
  */
 class Moon {
-constructor(img) {
-    this.img = img;
-    this.calculateDimensions();
-    this.floatSpeed = 0.002;
-    this.floatAmplitude = 15;
-    this.floatOffset = 0;
-}
+  constructor(img) {
+      this.img = img;
+      this.calculateDimensions();
+      this.floatSpeed = 0.002;
+      this.floatAmplitude = 15;
+      this.floatOffset = 0;
+  }
 
-calculateDimensions() {
-    this.leftBoundary = (windowWidth * 5) / 7;
-    this.size = windowWidth * 0.2;
-    this.x = this.leftBoundary + (windowWidth - this.leftBoundary) / 2;
-    this.y = windowHeight * 0.15;
-}
+  calculateDimensions() {
+      this.leftBoundary = (windowWidth * 5) / 7;
+      this.size = windowWidth * 0.2;
+      this.x = this.leftBoundary + (windowWidth - this.leftBoundary) / 2;
+      this.y = windowHeight * 0.15;
+  }
 
-update() {
-    this.floatOffset = sin(frameCount * this.floatSpeed) * this.floatAmplitude;
-}
+  update() {
+      this.floatOffset = sin(frameCount * this.floatSpeed) * this.floatAmplitude;
+  }
 
-display() {
-    if (this.img) {
-      push();
-      tint(255, 220);
-      image(
-        this.img,
-        this.x - this.size / 2,
-        this.y + this.floatOffset - this.size / 2,
-        this.size,
-        this.size
-      );
-      pop();
-    }
-}
+  display() {
+      if (this.img) {
+        push();
+        tint(255, 220);
+        image(
+          this.img,
+          this.x - this.size / 2,
+          this.y + this.floatOffset - this.size / 2,
+          this.size,
+          this.size
+        );
+        pop();
+      }
+  }
 
-handleResize() {
-    this.calculateDimensions();
-}
+  handleResize() {
+      this.calculateDimensions();
+  }
 }
 
 /**
@@ -237,6 +235,11 @@ class FloatingImage {
         pop();
     }
 }
+
+/**
+ * Welcome Scene
+ */
+
 class WelcomeScene {
   constructor() {
     // Move global variables here
@@ -250,22 +253,26 @@ class WelcomeScene {
       min: 450,
       max: 460
     };
+
     this.assets = {
       merchantImage: null,
       moonImage: null,
       cloudImages: []  
     };
+
     this.canvasw;
     this.canvash;
     this.buttonWidth;
     this.buttonHeight;
     this.startButtonX; 
     this.isLoading = true;
+
     this.loadedAssets = {
       merchant: false,
       moon: false,
       clouds: false
     };
+
     this.font = null;
   }
 
@@ -333,6 +340,7 @@ class WelcomeScene {
       this.setup();
     }
   }
+
 /**
  * Initialize the canvas and all visual elements
  * This function runs after preload() when all assets are ready
@@ -446,7 +454,7 @@ class WelcomeScene {
     });
   }
 
-  /**
+/**
  * Draw the clouds
  * This function updates and displays all clouds
  */
@@ -583,7 +591,6 @@ class WelcomeScene {
     textSize(titleSize);
     textLeading(titleSize * TYPOGRAPHY.TITLE.LEADING);
     
-    // Rest of your title drawing code...
     const titleY = this.canvash / 3 + sin(frameCount * 0.02) * 5;
     
     this.drawTextWithShadow(
@@ -594,7 +601,7 @@ class WelcomeScene {
       2
     );
     pop();
-}
+  }
 
   /**
  * Draw the start button
@@ -700,6 +707,4 @@ class WelcomeScene {
       max: this.canvash * 0.8
     };
   }
-
-
 } 
