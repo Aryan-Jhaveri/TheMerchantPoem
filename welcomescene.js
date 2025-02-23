@@ -285,13 +285,13 @@ class WelcomeScene {
  */  
   preload() {
     const handleImageError = (err) => {
-      console.error('Failed to load image:', err);
+      //console.error('Failed to load image:', err);
     };
 
     // Load merchant image
     this.assets.merchantImage = loadImage("assets/merch.png", 
       () => {
-        console.log("Merchant image loaded successfully");
+        //console.log("Merchant image loaded successfully");
         this.loadedAssets.merchant = true;
         this.checkAllAssetsLoaded();
       },
@@ -301,7 +301,7 @@ class WelcomeScene {
     // Load moon image
     this.assets.moonImage = loadImage("assets/moon.png",
       () => {
-        console.log("Moon image loaded successfully");
+        //console.log("Moon image loaded successfully");
         this.loadedAssets.moon = true;
         this.checkAllAssetsLoaded();
       },
@@ -315,7 +315,7 @@ class WelcomeScene {
     for (let i = 1; i <= 4; i++) {
       this.assets.cloudImages[i-1] = loadImage(`assets/cloud${i}.png`, 
         () => {
-          console.log(`Cloud image ${i} loaded successfully`);
+          //console.log(`Cloud image ${i} loaded successfully`);
           loadedCloudCount++;
           if (loadedCloudCount === 4) {
             this.loadedAssets.clouds = true;
@@ -331,7 +331,7 @@ class WelcomeScene {
   }
   checkAllAssetsLoaded() {
     if (Object.values(this.loadedAssets).every(loaded => loaded)) {
-      console.log("All assets loaded, running setup");
+      //console.log("All assets loaded, running setup");
       this.isLoading = false;
       this.setup();
     }
