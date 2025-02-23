@@ -165,9 +165,9 @@ function createMusicControls() {
   controlsDiv.id('music-controls');
 
   // Create title text
-  const titleSpan = createSpan('Life of Pi - A.Jhaveri');
+  const titleSpan = createSpan('Life of Pi.mp3 - A.Jhaveri');
   titleSpan.style('color', 'white');
-  titleSpan.style('font-family', 'Jacquard12');
+  titleSpan.style('font-family', menuFont ? 'Jacquard12' : 'sans-serif');
   titleSpan.style('margin-right', '10px');
   titleSpan.parent(controlsDiv);
 
