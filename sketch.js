@@ -100,7 +100,7 @@ function createMenuButtons() {
 
   // Create the buttons
   homeButton = createSceneButton('Home', WelcomeScene);
-  poemButton = createSceneButton('Poem', JourneyScene);
+  //poemButton = createSceneButton('Poem', JourneyScene);
   resourcesButton = createSceneButton('Resources', LastScene);
 
   // Initial position update
