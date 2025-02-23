@@ -239,7 +239,6 @@ class FloatingImage {
 /**
  * Welcome Scene
  */
-
 class WelcomeScene {
   constructor() {
     // Move global variables here
@@ -275,14 +274,12 @@ class WelcomeScene {
 
     this.font = null;
   }
-
   enter() {
     // Call preload when scene enters
     this.preload();
   }
 
-
-/**
+  /**
  * Preload all required assets
  * This function runs before setup() and ensures all assets are loaded
  */  
@@ -332,7 +329,6 @@ class WelcomeScene {
     // Load custom font
     this.font = loadFont("assets/Jacquard12-Regular.ttf");
   }
-
   checkAllAssetsLoaded() {
     if (Object.values(this.loadedAssets).every(loaded => loaded)) {
       console.log("All assets loaded, running setup");
@@ -341,10 +337,55 @@ class WelcomeScene {
     }
   }
 
-/**
- * Initialize the canvas and all visual elements
- * This function runs after preload() when all assets are ready
+  /**
+   * Initialize the stars
+   * This function creates the star objects and adds them to the stars array
+   */
+  initializeStars() {
+    for (let i = 0; i < VISUAL_SETTINGS.STAR_COUNT; i++) {
+      this.stars.push(new Star());
+    }
+  }
+
+  /**
+  * Initialize the interface elements
+  * This function calculates the button dimensions and updates the button position
+  */
+  initializeInterface() {
+    this.buttonWidth = min(this.canvasw * VISUAL_SETTINGS.CANVAS.BUTTON_WIDTH_PERCENT, 
+                    VISUAL_SETTINGS.CANVAS.MAX_BUTTON_WIDTH);
+    this.buttonHeight = min(this.canvash * VISUAL_SETTINGS.CANVAS.BUTTON_HEIGHT_PERCENT,
+                      VISUAL_SETTINGS.CANVAS.MAX_BUTTON_HEIGHT);
+    this.updateButtonPosition();
+  }
+
+  /**
+ * Initialize the clouds
+ * This function creates the cloud objects and adds them to the clouds array
  */
+  setupClouds() {
+    this.clouds = [];  // Reset clouds array
+    for (let i = 0; i < this.assets.cloudImages.length * 3; i++) {
+      this.clouds.push(new Cloud(
+        this.assets.cloudImages[i % this.assets.cloudImages.length],
+        random(0.1, 0.3)
+      ));
+    }
+  }
+
+  /**
+ * Update the position of the start button
+ * This function updates the position of the start button
+ */
+  updateButtonPosition() {
+    this.startButtonX = this.canvasw / 2 - this.buttonWidth / 2;
+    this.startButtonY = this.canvash / 2 - this.buttonHeight / 2;
+  }
+
+  /**
+   * Initialize the canvas and all visual elements
+   * This function runs after preload() when all assets are ready
+   */
   setup() {
     this.canvasw = windowWidth;
     this.canvash = windowHeight;
@@ -363,9 +404,87 @@ class WelcomeScene {
   }
 
   /**
- * Draw the welcome scene
- * This function is called on every frame and handles the drawing of all elements
+ * Draw the starry background
+ * This function updates and displays all stars
  */
+  drawStarryBackground() {
+    this.stars.forEach(star => {
+      star.update();
+      star.display();
+    });
+  }
+
+/**
+ * Draw the clouds
+ * This function updates and displays all clouds
+ */
+  drawClouds() {
+    if (this.clouds && this.clouds.length > 0) {
+      this.clouds.forEach(cloud => {
+        cloud.update();
+        cloud.display();
+      });
+    }
+  }
+
+  /**
+ * Draw the ocean waves
+ * This function updates and displays the ocean waves
+ */
+  drawWave() {
+    const t = frameCount * 0.0003; // Time variable for texture animation
+    
+    // Draw three wave layers with different properties
+    for (let waveIndex = 0; waveIndex < 3; waveIndex++) {
+      push();
+      
+      // Configure wave layer properties
+      const alpha = map(waveIndex, 0, 2, 300, 50); // Alpha value based on layer index
+      const waveColor = color(40, 57, 92, alpha); // Blue color with alpha 
+      
+      // Calculate wave boundaries
+      const yMin = this.yRange.min;
+      const yMax = this.yRange.max;
+      
+      // Create the main wave shape
+      beginShape();
+      noStroke();
+      fill(waveColor);
+      
+      // Generate wave points using Perlin noise
+      const wavePoints = [];
+      let xoff = 0;
+      
+      // Create wave vertices
+      vertex(-20, height);
+      for (let x = -20; x <= width + 20; x += VISUAL_SETTINGS.WAVE.STEP) {
+        const y = map(
+          noise(xoff, this.yoff + waveIndex * 0.5),
+          0, 1,
+          yMin, yMax
+        );
+        vertex(x, y);
+        wavePoints.push({ x, y });
+        xoff += VISUAL_SETTINGS.WAVE.NOISE_SCALE;
+      }
+      vertex(width + 20, height);
+      endShape(CLOSE);
+      
+      // Add pixelated texture within the wave shape
+      this.addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex);
+      
+      pop();
+    }
+    
+    // Update noise offset for continuous wave movement
+    this.yoff += VISUAL_SETTINGS.WAVE.Y_INCREMENT;
+  }
+
+
+  /**
+   * Draw the welcome scene
+   * This function is called on every frame and handles the drawing of all elements
+   */
   draw() {
     background(0, 45);
     
@@ -407,119 +526,7 @@ class WelcomeScene {
     this.drawStartButton();
   }
 
-  /**
- * Initialize the stars
- * This function creates the star objects and adds them to the stars array
- */
-  initializeStars() {
-    for (let i = 0; i < VISUAL_SETTINGS.STAR_COUNT; i++) {
-      this.stars.push(new Star());
-    }
-  }
-
-  /**
- * Initialize the interface elements
- * This function calculates the button dimensions and updates the button position
- */
-  initializeInterface() {
-    this.buttonWidth = min(this.canvasw * VISUAL_SETTINGS.CANVAS.BUTTON_WIDTH_PERCENT, 
-                     VISUAL_SETTINGS.CANVAS.MAX_BUTTON_WIDTH);
-    this.buttonHeight = min(this.canvash * VISUAL_SETTINGS.CANVAS.BUTTON_HEIGHT_PERCENT,
-                      VISUAL_SETTINGS.CANVAS.MAX_BUTTON_HEIGHT);
-    this.updateButtonPosition();
-  }
-
-  /**
- * Initialize the clouds
- * This function creates the cloud objects and adds them to the clouds array
- */
-  setupClouds() {
-    this.clouds = [];  // Reset clouds array
-    for (let i = 0; i < this.assets.cloudImages.length * 3; i++) {
-      this.clouds.push(new Cloud(
-        this.assets.cloudImages[i % this.assets.cloudImages.length],
-        random(0.1, 0.3)
-      ));
-    }
-  }
-
-  /**
- * Draw the starry background
- * This function updates and displays all stars
- */
-  drawStarryBackground() {
-    this.stars.forEach(star => {
-      star.update();
-      star.display();
-    });
-  }
-
-/**
- * Draw the clouds
- * This function updates and displays all clouds
- */
-  drawClouds() {
-    if (this.clouds && this.clouds.length > 0) {
-      this.clouds.forEach(cloud => {
-        cloud.update();
-        cloud.display();
-      });
-    }
-  }
-
-  /**
- * Draw the ocean waves
- * This function updates and displays the ocean waves
- */
-  drawWave() {
-    const t = frameCount * 0.0003; // Time variable for texture animation
-    
-    // Draw three wave layers with different properties
-    for (let waveIndex = 0; waveIndex < 3; waveIndex++) {
-      push();
-      
-      // Configure wave layer properties
-      const alpha = map(waveIndex, 0, 2, 300, 50);
-      const waveColor = color(55, 78, 135, alpha);
-      
-      // Calculate wave boundaries
-      const yMin = this.yRange.min;
-      const yMax = this.yRange.max;
-      
-      // Create the main wave shape
-      beginShape();
-      noStroke();
-      fill(waveColor);
-      
-      // Generate wave points using Perlin noise
-      const wavePoints = [];
-      let xoff = 0;
-      
-      // Create wave vertices
-      vertex(-20, height);
-      for (let x = -20; x <= width + 20; x += VISUAL_SETTINGS.WAVE.STEP) {
-        const y = map(
-          noise(xoff, this.yoff + waveIndex * 0.5),
-          0, 1,
-          yMin, yMax
-        );
-        vertex(x, y);
-        wavePoints.push({ x, y });
-        xoff += VISUAL_SETTINGS.WAVE.NOISE_SCALE;
-      }
-      vertex(width + 20, height);
-      endShape(CLOSE);
-      
-      // Add pixelated texture within the wave shape
-      this.addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex);
-      
-      pop();
-    }
-    
-    // Update noise offset for continuous wave movement
-    this.yoff += VISUAL_SETTINGS.WAVE.Y_INCREMENT;
-  }
-
+  
 /**
  * Adds pixelated texture effect to the wave
  * @param {Array} wavePoints - Array of wave vertex positions
@@ -668,15 +675,6 @@ class WelcomeScene {
       // Change scene when button is clicked
       window.mgr.showScene(JourneyScene);
     }
-  }
-
-  /**
- * Update the position of the start button
- * This function updates the position of the start button
- */
-  updateButtonPosition() {
-    this.startButtonX = this.canvasw / 2 - this.buttonWidth / 2;
-    this.startButtonY = this.canvash / 2 - this.buttonHeight / 2;
   }
 
   /**

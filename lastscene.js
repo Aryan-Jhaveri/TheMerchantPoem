@@ -82,18 +82,27 @@ class LastScene {
   };
 
   this.font = null;
-}
+  }
 
+  /**
+ * Preload assets before setup
+ */
   preload() {
-    // Load custom font if needed
     this.font = loadFont("assets/Jacquard12-Regular.ttf");
   }
 
+  /**
+   * Setup the scene
+   */
   setup() {
     createCanvas(windowWidth, windowHeight);
     this.initializeStars();
   }
 
+  /**
+   * Enter the scene
+   * - Create and display all necessary elements
+   */
   enter() {
     console.log('Entering LastScene...');
     // Ensure clean slate
@@ -107,6 +116,11 @@ class LastScene {
     }, 50);
   }
 
+  /**
+   * Create the about section
+   * - Title
+   * - Content
+   */
   createAboutSection() {
     // Remove existing section if it exists
     const existingSection = select('.about-section');
@@ -137,6 +151,11 @@ class LastScene {
     aboutContent.style('font-size', `${this.styles.text.getSize()}px`);
   }
 
+  /**
+   * Create the resources section
+   * - Title
+   * - List of links
+   */
   createResourcesSection() {
     // Remove existing section if it exists
     const existingSection = select('.resources-section');
@@ -185,24 +204,37 @@ class LastScene {
     });
   }
 
-
+  /**
+   * 
+   * @returns {boolean} Whether the current viewport is mobile
+   */
   isMobile() {
     return windowWidth < this.layout.breakpoints.mobile;
   }
 
+  /**
+   * 
+   * @returns {boolean} Whether the current viewport is tablet
+   * - Excludes mobile
+   * - Includes tablet
+   */
   isTablet() {
     return windowWidth >= this.layout.breakpoints.mobile && 
            windowWidth < this.layout.breakpoints.tablet;
   }
 
-
-   initializeStars() {
+  /**
+   * Initialize the star field
+   */
+  initializeStars() {
     for (let i = 0; i < VISUAL_SETTINGS.STAR_COUNT; i++) {
       this.stars.push(new Star());
     }
   }
 
-
+  /**
+   * Draw the starry background
+   */
   drawStarryBackground() {
     this.stars.forEach(star => {
       star.update();
@@ -210,20 +242,34 @@ class LastScene {
     });
   }
 
+  /**
+   * Draw the scene
+   */
   draw() {
     background(0,255);
-    //this.drawStarryBackground();
+    this.drawStarryBackground();
   }
 
+  /**
+   * Handle mouse press event
+   */
   mousePressed() {
   }
 
+  /**
+   * Handle window resize event
+   */
   windowResized() {
     resizeCanvas(windowWidth, windowHeight);
     this.createAboutSection();
     this.createResourcesSection();
   }
 
+  /**
+   * Exit the scene
+   * - Remove all tracked elements
+   * - Clear the canvas
+   */
   exit() {
     console.log('Cleaning up LastScene...');
     // Remove all tracked DOM elements

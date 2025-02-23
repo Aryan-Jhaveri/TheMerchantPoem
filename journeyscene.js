@@ -42,12 +42,16 @@ class JourneyScene {
       merchant: false
     };
   }
-
+  /*
+  * Preload function for the scene
+  */
   enter() {
   // Load font when scene enters
   this.preload();
   }
-
+  /**
+  * Preload function for the scene
+  */
   preload() {
     // Add font loading
     this.font = loadFont("assets/Jacquard12-Regular.ttf");
@@ -72,7 +76,9 @@ class JourneyScene {
       (err) => console.error('Failed to load merchant image:', err)
     );
   }
-
+  /**
+   * Check if all assets are loaded
+   */
   checkAllAssetsLoaded() {
     if (Object.values(this.loadedAssets).every(loaded => loaded)) {
       console.log("All assets loaded");
@@ -80,17 +86,27 @@ class JourneyScene {
       this.setupMerchant();
     }
   }
-
+  /**
+   * Setup function for the scene
+   */
   setupMoon() {
     this.moon = new Moon(this.assets.moonImage);
   }
 
+  /**
+   * Setup function for the scene
+   * This function initializes the canvas and stars
+   * It also sets up the moon and floating merchant
+   */
   setupMerchant() {
     this.floatingMerchant = new FloatingImage(this.assets.merchantImage);
     this.floatingMerchant.yoff = this.yoff;
     this.floatingMerchant.yRange = this.yRange;
   }
 
+  /**
+   * Setup function for the scene
+   */
   setup() {
     createCanvas(windowWidth, windowHeight);
     this.initializeStars();
@@ -98,7 +114,9 @@ class JourneyScene {
     this.isDesktopView = window.innerWidth > 768;
   }
 
-  // Poetry Sections
+  /**
+   * Setup function for the scene
+   */
   setupSections() {
     this.sections = [
         {
@@ -213,16 +231,23 @@ class JourneyScene {
             yPos: windowHeight * 13
         }
     ];
-}
+  }
 
-  // Add star initialization method
+  /**
+   * Initialize the starry background
+   * This function creates a number of Star objects
+   * and adds them to the stars array
+   */
   initializeStars() {
     for (let i = 0; i < VISUAL_SETTINGS.STAR_COUNT; i++) {
       this.stars.push(new Star());
     }
   }
 
-  // Add star background drawing method
+  /**
+   * Draw the starry background
+   * This function updates and displays all stars
+   */
   drawStarryBackground() {
     this.stars.forEach(star => {
       star.update();
@@ -230,6 +255,9 @@ class JourneyScene {
     });
   }
 
+/**
+ *  Draw the scrolling content
+ */
   drawScrollingContent() {
     push();
     resetMatrix();
@@ -275,6 +303,11 @@ class JourneyScene {
     pop();
   }
 
+/**
+ * Draw function for the scene
+ * This function draws the starry background, scrolling content,
+ * moon, waves, and floating merchant
+ */
   draw() {
     background(0, 255);
     this.drawStarryBackground();
@@ -316,10 +349,20 @@ class JourneyScene {
     }
   }
 
+/**
+ * Mouse pressed function for the scene
+ *  This function handles mouse interactions
+ */
   mousePressed() {
     // Handle mouse interactions
   }
 
+/**
+ * Mouse wheel function for the scene
+ * This function handles mouse wheel interactions
+ * @param {*} event 
+ * @returns 
+ */
   mouseWheel(event) {
     if (this.isSnapping) {
         return false;
@@ -354,6 +397,10 @@ class JourneyScene {
     return false;
   }
 
+/**
+ * Window resized function for the scene
+ * This function resizes the canvas and stars
+ */
   windowResized() {
     resizeCanvas(windowWidth, windowHeight);
     this.stars.forEach(star => star.handleResize());
@@ -393,8 +440,8 @@ class JourneyScene {
       push();
       
       // Configure wave layer properties
-      const alpha = map(waveIndex, 0, 2, 300, 50);
-      const waveColor = color(55, 78, 135, alpha);
+      const alpha = map(waveIndex, 0, 2, 300, 50); // Alpha value based on layer index
+      const waveColor = color(40, 57, 92, alpha); // Blue color with alpha 
       
       // Calculate wave boundaries
       const yMin = this.yRange.min;

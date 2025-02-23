@@ -14,6 +14,9 @@ let poemButton;
 let resourcesButton;
 let menuDiv;
 
+/**
+ * Breakpoints for responsive design
+ */
 function preload() {
   // Load the font
   menuFont = loadFont('assets/Jacquard12-Regular.ttf');
@@ -56,6 +59,9 @@ function preload() {
   
 }
 
+/**
+ * Create menu buttons with responsive layout
+ */
 function createMenuButtons() {
   // Create container div for menu buttons
   menuDiv = createDiv('');
@@ -152,6 +158,9 @@ function createMenuButtons() {
   });
 }
 
+/**
+ * Setup the sketch
+ */
 function setup() {
   createCanvas(windowWidth, windowHeight);
   // Disable device orientation and motion handling
@@ -185,6 +194,10 @@ function setup() {
   
   mgr.showScene(WelcomeScene);
 }
+
+/**
+ * Create music controls with play/pause button and volume slider
+ */
 
 function createMusicControls() {
   // Create container div for music controls
@@ -230,6 +243,10 @@ function createMusicControls() {
   volumeSlider.parent(controlsDiv);
 }
 
+/**
+ * 
+ * @returns {AudioContext} The shared audio context
+ */
 async function togglePlay() {
   try {
     // Ensure audio context is properly resumed
@@ -271,20 +288,34 @@ async function togglePlay() {
   });
 }
 
+/**
+ * Update the volume based on the slider value
+ */
 function updateVolume() {
   const volume = volumeSlider.value();
   backgroundMusic.setVolume(volume);
 }
 
+/**
+ * Draw the sketch
+ */
 function draw() {
   mgr.draw();
 }
 
+/**
+ * Handle mouse press event
+ */
 function mousePressed() {
-  // The buttons now handle their own click events
+  // The buttons handle their own click events
   mgr.mousePressed();
 }
 
+/**
+ * 
+ * @param {*} event 
+ * @returns 
+ */
 function mouseWheel(event) {
   if (mgr && mgr.scene) {
     const actualScene = mgr.scene.oScene;
@@ -295,14 +326,17 @@ function mouseWheel(event) {
   return true;
 }
 
-// Get responsive menu configuration based on screen size
+/**
+ * 
+ * @returns {boolean} Whether the current viewport is tablet
+ */
 function getMenuConfig() {
   const config = {
     mobile: {
       topOffset: windowHeight * 0.05,    // 5% from top
       leftOffset: windowWidth * 0.02,    // 2% from left
-      buttonWidth: min(windowWidth * 0.50, 100), // 25% of width or max 100px
-      fontSize: '14px',
+      buttonWidth: windowWidth * 0.50, 
+      fontSize: '50px',
       padding: '8px 15px',
       direction: 'row',
       gap: '5px'
@@ -310,7 +344,7 @@ function getMenuConfig() {
     tablet: {
       topOffset: windowHeight * 0.08,    // 8% from top
       leftOffset: windowWidth * 0.03,    // 3% from left
-      buttonWidth: '120px',
+      buttonWidth: windowWidth * 0.50,
       fontSize: '15px',
       padding: '10px 20px',
       direction: 'column',
@@ -319,8 +353,8 @@ function getMenuConfig() {
     desktop: {
       topOffset: windowHeight * 0.03,    // 3% from top
       leftOffset: windowWidth * 0.02,    // 2% from left
-      buttonWidth: '120px',
-      fontSize: '25px',
+      buttonWidth: windowWidth * 0.50,
+      fontSize: '50px',
       padding: '10px 20px',
       direction: 'row',
       gap: '10px'
@@ -332,6 +366,9 @@ function getMenuConfig() {
   return config.desktop;
 }
 
+/*
+* Update the menu position based on the current window size
+*/
 function updateMenuPosition() {
   if (!menuDiv) return;
 
@@ -352,6 +389,9 @@ function updateMenuPosition() {
   });
 }
 
+/**
+ * Handle window resizing
+ */
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   
@@ -364,13 +404,22 @@ function windowResized() {
   }
 }
 
+/**
+ * 
+ * @param {*} event 
+ * @returns 
+ */
 function handleSliderTouch(event) {
   event.preventDefault();
   updateVolume();
   return false;
 }
 
-// Update the touchStarted function to handle both button and slider
+/**
+ * 
+ * @param {*} event 
+ * @returns 
+ */
 function touchStarted(event) {
   // Check if touch is on music controls or menu buttons
   const musicControls = select('#music-controls').elt;
@@ -395,7 +444,11 @@ function touchStarted(event) {
   return false;
 }
 
-// Update touchMoved to allow slider interaction
+/**
+ * 
+ * @param {*} event 
+ * @returns 
+ */
 function touchMoved(event) {
   // Check if touch is on music controls
   const musicControls = select('#music-controls').elt;
@@ -428,6 +481,10 @@ function touchMoved(event) {
   return false;
 }
 
+/**
+ * 
+ * @returns 
+ */
 function touchEnded() {
   // Only clear if we actually had a touch start
   if (touchStartY !== null) {
