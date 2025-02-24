@@ -202,7 +202,7 @@ class LastScene {
     resourcesContainer.style('overflow-y', 'auto'); // Enable vertical scrolling
     resourcesContainer.style('padding-right', '20px'); // Add padding for scrollbar
     resourcesContainer.style('-webkit-overflow-scrolling', 'touch'); // Enable momentum scrolling on iOS
-    resourcesContainer.style('touch-action', 'manipulation'); // Optimize touch handling
+    resourcesContainer.style('touch-action', 'pan-y'); // Optimize touch handling
     resourcesContainer.style('user-select', 'none'); // Prevent text selection while scrolling
     resourcesContainer.style('cursor', 'default'); // Default cursor
     resourcesContainer.style('overscroll-behavior', 'contain'); // Prevent scroll chain
