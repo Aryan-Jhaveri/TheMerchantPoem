@@ -60,10 +60,6 @@ class LastScene {
     
   // Add responsive layout settings
   this.layout = {
-    breakpoints: {
-      mobile: 768,
-      tablet: 1024
-    },
     spacing: {
       getSectionMargin: () => {
         return this.isMobile() ? 0.05 : 0.1;
@@ -214,7 +210,7 @@ class LastScene {
     resourcesContainer.style('-webkit-tap-highlight-color', 'rgba(0,0,0,0)'); // Remove tap highlight on mobile
     
     // Mobile-specific styles
-    if (this.isMobile()) {
+    if (!this.isMobile()) {
       resourcesContainer.style('overflow-y', 'scroll');
       resourcesContainer.style('height', '50vh'); // Slightly smaller height on mobile
       resourcesContainer.style('padding-right', '10px'); // Smaller padding on mobile
@@ -284,7 +280,7 @@ class LastScene {
    * @returns {boolean} Whether the current viewport is mobile
    */
   isMobile() {
-    return windowWidth < this.layout.breakpoints.mobile;
+    return windowWidth < BREAKPOINTS.MOBILE;
   }
 
   /**
@@ -294,8 +290,8 @@ class LastScene {
    * - Includes tablet
    */
   isTablet() {
-    return windowWidth >= this.layout.breakpoints.mobile && 
-           windowWidth < this.layout.breakpoints.tablet;
+    return windowWidth >= BREAKPOINTS.MOBILE && 
+           windowWidth < BREAKPOINTS.TABLET;
   }
 
   /**
@@ -329,103 +325,58 @@ class LastScene {
    * Handle touch start event
    */
   touchStarted(event) {
-    // Initialize touch tracking if not exists
-    if (!this.touchTracker) {
-      this.touchTracker = {
-        startY: 0,
-        startX: 0,
-        lastY: 0,
-        startTime: 0,
-        isScrolling: false,
-        scrollVelocity: 0,
-        targetLink: null,
-        momentumRAF: null
-      };
-    }
-
-    const resourcesSection = select('.resources-section');
-    if (!resourcesSection || !touches || touches.length === 0) return true;
+    if (!touches || touches.length === 0) return true;
 
     const touch = touches[0];
-    const rect = resourcesSection.elt.getBoundingClientRect();
+    
+    // Store initial touch position and touched element
+    this.touchLastY = touch.y;
+    this.touchStartElement = document.elementFromPoint(touch.x, touch.y);
+    this.touchMoved = false;
 
-    // Cancel any ongoing momentum scrolling
-    if (this.touchTracker.momentumRAF) {
-      cancelAnimationFrame(this.touchTracker.momentumRAF);
-      this.touchTracker.momentumRAF = null;
-    }
-
-    // Store touch start information
-    this.touchTracker.startY = touch.y;
-    this.touchTracker.startX = touch.x;
-    this.touchTracker.lastY = touch.y;
-    this.touchTracker.startTime = millis();
-    this.touchTracker.isScrolling = touch.y >= rect.top && touch.y <= rect.bottom;
-    this.touchTracker.scrollVelocity = 0;
-
-    // Check if touch started on a link
-    const element = document.elementFromPoint(touch.x, touch.y);
-    this.touchTracker.targetLink = element && element.tagName === 'A' ? element : null;
-
-    // Prevent default only if we're handling the scroll
-    return !this.touchTracker.isScrolling;
+    // Always prevent default to handle all touch events
+    if (event.cancelable) event.preventDefault();
+    return false;
   }
 
   /**
    * Handle touch moved event
    */
   touchMoved(event) {
-    if (!this.touchTracker) return true;
-
     const resourcesSection = select('.resources-section');
-    if (!resourcesSection || !touches || touches.length === 0) return true;
+    if (!resourcesSection || !touches || touches.length === 0 || this.touchLastY === undefined) return true;
 
     const touch = touches[0];
-    const deltaY = this.touchTracker.lastY - touch.y;
-    const deltaX = Math.abs(this.touchTracker.startX - touch.x);
-    const timeDelta = millis() - this.touchTracker.startTime;
-
-    // Calculate scroll velocity (pixels per millisecond)
-    this.touchTracker.scrollVelocity = deltaY / Math.max(1, timeDelta);
-
-    // If significant horizontal movement, cancel potential link activation
-    if (deltaX > 10) {
-      this.touchTracker.targetLink = null;
+    const deltaY = this.touchLastY - touch.y;
+    
+    // Mark as moved if there's significant vertical movement
+    if (Math.abs(deltaY) > 5) {
+      this.touchMoved = true;
     }
 
-    // Handle scrolling with enhanced sensitivity
-    if (this.isScrolling) {
-      // Smooth scrolling with momentum
-      const scrollSpeed = constrain(deltaY * 1.2, -50, 50);
-      resourcesSection.elt.scrollBy(0, scrollSpeed);
-      return false; // Prevent default scrolling
-    }
+    // Update resources section scroll position based on touch movement
+    resourcesSection.elt.scrollTop += deltaY;
+    this.touchLastY = touch.y;
 
-    return true;
+    if (event.cancelable) event.preventDefault();
+    return false;
   }
 
   /**
    * Handle touch ended event
    */
   touchEnded(event) {
-    // Check if this was a tap on a link
-    if (this.touchedLink && millis() - this.touchStartTime < 300) {
-      const deltaY = Math.abs(touches && touches[0] ? touches[0].y - this.touchStartY : 0);
-      const deltaX = Math.abs(touches && touches[0] ? touches[0].x - this.touchStartX : 0);
-      
-      // If movement was minimal, trigger the link
-      if (deltaY < 10 && deltaX < 10) {
-        this.touchedLink.click();
-      }
+    // Handle link clicks only if there was minimal movement
+    if (!this.touchMoved && 
+        this.touchStartElement && 
+        this.touchStartElement.tagName === 'A') {
+      this.touchStartElement.click();
     }
 
-    // Reset touch tracking variables
-    this.touchStartY = null;
-    this.touchStartX = null;
-    this.lastTouchY = null;
-    this.touchStartTime = null;
-    this.isScrolling = false;
-    this.touchedLink = null;
+    // Clean up
+    this.touchLastY = undefined;
+    this.touchStartElement = null;
+    this.touchMoved = false;
     
     return true;
   }
