@@ -705,4 +705,20 @@ class WelcomeScene {
       max: this.canvash * 0.8
     };
   }
+
+  exit() {
+    console.log('Cleaning up WelcomeScene...');
+    // Clear the stars array
+    this.stars = [];
+    // Clear the clouds array
+    this.clouds = [];
+    // Reset wave properties
+    this.yoff = VISUAL_SETTINGS.WAVE.Y_OFFSET_START;
+    this.yRange = {
+      min: 450,
+      max: 460
+    };
+    // Clear the canvas
+    clear();
+  }
 } 
