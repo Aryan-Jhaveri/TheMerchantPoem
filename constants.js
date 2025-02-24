@@ -14,8 +14,8 @@ const VISUAL_SETTINGS = {
   // Wave animation properties
   WAVE: {
     Y_OFFSET_START: 0.09,
-    STEP: 3,
-    NOISE_SCALE: 0.0001,
+    STEP: 5,
+    NOISE_SCALE: 0.000,
     Y_INCREMENT: 0.004
   },
   

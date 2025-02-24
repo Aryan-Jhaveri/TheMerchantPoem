@@ -173,67 +173,106 @@ class Moon {
 /**
  * FloatingImage class manages the merchant character's movement and interaction with waves
  */
+/**
+ * FloatingImage class manages the merchant character's movement and interaction with waves
+ */
 class FloatingImage {
-    constructor(img) {
-        this.img = img;
-        this.initializeProperties();
-    }
+  constructor(img) {
+      this.img = img;
+      this.initializeProperties();
+  }
 
-    initializeProperties() {
-        // Position constraints
-        this.xMin = 100;
-        this.xMax = 200;
-        this.yMin = 330;
-        this.yMax = 500;
+  initializeProperties() {
+      // Position constraints
+      this.xMin = 100;
+      this.xMax = 200;
+      this.yMin = 300;
+      this.yMax = 500;
 
-        // Current position and dimensions
-        this.x = (this.xMin + this.xMax) / 2;
-        this.y = (this.yMin + this.yMax) / 2;
-        this.width = 230;
-        this.height = 200;
+      // Current position and dimensions
+      this.x = (this.xMin + this.xMax) / 2;
+      this.y = (this.yMin + this.yMax) / 2;
+      this.width = 230;
+      this.height = 200;
 
-        // Physics properties
-        this.velocity = createVector(0, 0);
-        this.dampening = 0.96;
-        this.waveInfluenceStrength = 0.04;
-        this.prevWaveHeight = 0;
-    }
+      // Wave interaction properties
+      this.yRange = { min: this.yMin, max: this.yMax }; // Default range
+      this.yoff = 0; // Will be updated from main scene
 
-    getWaveHeightAtPosition(xoff, yoff) {
-        return map(
-        noise(this.x * VISUAL_SETTINGS.WAVE.NOISE_SCALE + xoff, yoff),
-        0, 1,
-        this.yRange.min,
-        this.yRange.max
-        );
-    }
+      // Physics properties
+      this.velocity = createVector(0, 0);
+      this.dampening = 0.96; // Changed from 1.0 to actually dampen motion
+      this.waveInfluenceStrength = 0.05;
+      this.prevWaveHeight = 0;
+      
+      // Additional subtle horizontal movement
+      this.xFloatOffset = 0;
+      this.xFloatSpeed = 0.001;
+      this.xFloatAmplitude = 5;
+  }
 
-    update() {
-        let currentWaveHeight = this.getWaveHeightAtPosition(0, this.yoff);
-        let waveVelocity = (currentWaveHeight - this.prevWaveHeight) * this.waveInfluenceStrength;
+  getWaveHeightAtPosition(xoff, yoff) {
+      return map(
+          noise(this.x * VISUAL_SETTINGS.WAVE.NOISE_SCALE + xoff, yoff),
+          0, 1,
+          this.yRange.min,
+          this.yRange.max
+      );
+  }
 
-        this.velocity.y += waveVelocity;
-        this.x += this.velocity.x;
-        this.y += this.velocity.y;
+  update() {
+      // Calculate wave height at current position
+      let currentWaveHeight = this.getWaveHeightAtPosition(0, this.yoff);
+      
+      // Calculate velocity change based on wave movement
+      let waveVelocity = (currentWaveHeight - this.prevWaveHeight) * this.waveInfluenceStrength;
 
-        this.x = constrain(this.x, this.xMin, this.xMax);
-        this.y = constrain(this.y, this.yMin, this.yMax);
+      // Add wave-based velocity to current velocity
+      this.velocity.y += waveVelocity;
+      
+      // Add slight horizontal movement
+      this.xFloatOffset = sin(frameCount * this.xFloatSpeed) * this.xFloatAmplitude;
+      
+      // Apply velocity to position
+      this.x = (this.xMin + this.xMax) / 2 + this.xFloatOffset;
+      this.y += this.velocity.y;
 
-        this.velocity.mult(this.dampening);
-        this.prevWaveHeight = currentWaveHeight;
-    }
+      // Keep within boundaries
+      this.y = constrain(this.y, this.yMin, this.yMax);
 
-    display() {
-        push();
-        image(
-        this.img,
-        this.x - this.width / 2,
-        this.y - this.height / 2,
-        this.width,
-        this.height
-        );
-        pop();
-    }
+      // Apply dampening to gradually reduce velocity
+      this.velocity.mult(this.dampening);
+      
+      // Store current wave height for next frame
+      this.prevWaveHeight = currentWaveHeight;
+  }
+
+  display() {
+      push();
+      image(
+          this.img,
+          this.x - this.width / 2,
+          this.y - this.height / 2,
+          this.width,
+          this.height
+      );
+      pop();
+  }
+  
+  // Method to update wave parameters when the scene changes
+  updateWaveParameters(yRange, yoff) {
+      this.yRange = yRange;
+      this.yoff = yoff;
+  }
+  
+  // Handle window resizing
+  handleResize(newYMin, newYMax) {
+      this.yMin = newYMin;
+      this.yMax = newYMax;
+      this.yRange = { min: this.yMin, max: this.yMax };
+      // Recalculate position if needed
+      this.y = constrain(this.y, this.yMin, this.yMax);
+  }
 }
 
 /**
@@ -390,17 +429,35 @@ class WelcomeScene {
     this.canvasw = windowWidth;
     this.canvash = windowHeight;
     createCanvas(this.canvasw, this.canvash);
-
+  
     // Initialize basic elements that don't depend on images
     this.initializeStars();
     this.initializeInterface();
     
+    // Set proper wave boundaries for the canvas
+    this.yRange = {
+      min: this.canvash * 0.6,  // Position waves at lower 40% of screen
+      max: this.canvash * 0.63  // Small range for subtle movement
+    };
+    
     // Create objects now that we know images are loaded
     this.moon = new Moon(this.assets.moonImage);
     this.setupClouds();
+    
+    // Create floating merchant with proper initial wave parameters
     this.floatingMerchant = new FloatingImage(this.assets.merchantImage);
-    this.floatingMerchant.yoff = this.yoff;
-    this.floatingMerchant.yRange = this.yRange;
+    
+    // Update merchant's position constraints based on canvas
+    this.floatingMerchant.xMin = this.canvasw * 0.2;
+    this.floatingMerchant.xMax = this.canvasw * 0.4;
+    this.floatingMerchant.yMin = this.canvash * 0.55; // Just above waves
+    this.floatingMerchant.yMax = this.canvash * 0.58; // Small range for subtle movement
+    
+    // Reinitialize merchant properties with new boundaries
+    this.floatingMerchant.initializeProperties();
+    
+    // Set the wave parameters
+    this.floatingMerchant.updateWaveParameters(this.yRange, this.yoff);
   }
 
   /**
@@ -516,7 +573,8 @@ class WelcomeScene {
     
     // Layer 6: Merchant character in the foreground
     if (this.floatingMerchant) {
-      this.floatingMerchant.yoff = this.yoff;
+      // Update the wave parameters before updating the merchant
+      this.floatingMerchant.updateWaveParameters(this.yRange, this.yoff);
       this.floatingMerchant.update();
       this.floatingMerchant.display();
     }
@@ -702,23 +760,16 @@ class WelcomeScene {
     // Update wave boundaries
     this.yRange = {
       min: this.canvash * 0.6,
-      max: this.canvash * 0.8
+      max: this.canvash * 0.63
     };
-  }
-
-  exit() {
-    console.log('Cleaning up WelcomeScene...');
-    // Clear the stars array
-    this.stars = [];
-    // Clear the clouds array
-    this.clouds = [];
-    // Reset wave properties
-    this.yoff = VISUAL_SETTINGS.WAVE.Y_OFFSET_START;
-    this.yRange = {
-      min: 450,
-      max: 460
-    };
-    // Clear the canvas
-    clear();
-  }
+    
+    // Update floating merchant position constraints
+    if (this.floatingMerchant) {
+      this.floatingMerchant.xMin = this.canvasw * 0.2;
+      this.floatingMerchant.xMax = this.canvasw * 0.4;
+      this.floatingMerchant.yMin = this.canvash * 0.55;
+      this.floatingMerchant.yMax = this.canvash * 0.58;
+      this.floatingMerchant.handleResize(this.floatingMerchant.yMin, this.floatingMerchant.yMax);
+    }
+  }  
 } 
