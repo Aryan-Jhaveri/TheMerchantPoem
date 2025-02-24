@@ -203,12 +203,15 @@ class LastScene {
     resourcesContainer.position(position.x, position.y);
     resourcesContainer.style('width', `${contentWidth * 100}%`);
     resourcesContainer.style('height', '60vh'); // Set fixed height
-    resourcesContainer.style('overflow-y', 'scroll'); // Enable vertical scrolling
+    resourcesContainer.style('overflow-y', 'auto'); // Enable vertical scrolling
     resourcesContainer.style('padding-right', '20px'); // Add padding for scrollbar
     resourcesContainer.style('-webkit-overflow-scrolling', 'touch'); // Enable momentum scrolling on iOS
-    resourcesContainer.style('touch-action', 'pan-y pinch-zoom'); // Allow vertical touch scrolling and pinch zoom
+    resourcesContainer.style('touch-action', 'manipulation'); // Optimize touch handling
     resourcesContainer.style('user-select', 'none'); // Prevent text selection while scrolling
     resourcesContainer.style('cursor', 'default'); // Default cursor
+    resourcesContainer.style('overscroll-behavior', 'contain'); // Prevent scroll chain
+    resourcesContainer.style('scroll-behavior', 'smooth'); // Smooth scrolling
+    resourcesContainer.style('-webkit-tap-highlight-color', 'rgba(0,0,0,0)'); // Remove tap highlight on mobile
     
     // Mobile-specific styles
     if (this.isMobile()) {
@@ -256,9 +259,15 @@ class LastScene {
       a.style('color', this.styles.link.color);
       a.style('text-decoration', 'none');
       a.style('font-size', `${this.styles.text.getSize()}px`);
-      a.style('padding', this.isMobile() ? '2px 0' : '5px 0');
+      a.style('padding', this.isMobile() ? '8px 0' : '5px 0'); // Larger touch target
+      a.style('display', 'inline-block'); // Make the full area clickable
+      a.style('cursor', 'pointer'); // Show pointer cursor
+      a.style('touch-action', 'manipulation'); // Optimize for touch
+      a.style('-webkit-tap-highlight-color', 'rgba(100,181,246,0.2)'); // Subtle tap highlight
       a.mouseOver(() => a.style('color', this.styles.link.hoverColor));
       a.mouseOut(() => a.style('color', this.styles.link.color));
+      a.touchStarted(() => a.style('color', this.styles.link.hoverColor));
+      a.touchEnded(() => a.style('color', this.styles.link.color));
 
       const description = createP(link.description);
       this.domElements.push(description);
@@ -320,43 +329,76 @@ class LastScene {
    * Handle touch start event
    */
   touchStarted(event) {
-    if (!this.isMobile()) return true;
+    // Initialize touch tracking if not exists
+    if (!this.touchTracker) {
+      this.touchTracker = {
+        startY: 0,
+        startX: 0,
+        lastY: 0,
+        startTime: 0,
+        isScrolling: false,
+        scrollVelocity: 0,
+        targetLink: null,
+        momentumRAF: null
+      };
+    }
 
     const resourcesSection = select('.resources-section');
     if (!resourcesSection || !touches || touches.length === 0) return true;
 
-    const rect = resourcesSection.elt.getBoundingClientRect();
     const touch = touches[0];
+    const rect = resourcesSection.elt.getBoundingClientRect();
 
-    // Store initial touch position for calculating delta
-    this.touchStartY = touch.y;
-    this.isScrolling = touch.y >= rect.top && touch.y <= rect.bottom;
-
-    // Allow default behavior if touching inside resources section
-    if (this.isScrolling) {
-      return true;
+    // Cancel any ongoing momentum scrolling
+    if (this.touchTracker.momentumRAF) {
+      cancelAnimationFrame(this.touchTracker.momentumRAF);
+      this.touchTracker.momentumRAF = null;
     }
 
-    return false;
+    // Store touch start information
+    this.touchTracker.startY = touch.y;
+    this.touchTracker.startX = touch.x;
+    this.touchTracker.lastY = touch.y;
+    this.touchTracker.startTime = millis();
+    this.touchTracker.isScrolling = touch.y >= rect.top && touch.y <= rect.bottom;
+    this.touchTracker.scrollVelocity = 0;
+
+    // Check if touch started on a link
+    const element = document.elementFromPoint(touch.x, touch.y);
+    this.touchTracker.targetLink = element && element.tagName === 'A' ? element : null;
+
+    // Prevent default only if we're handling the scroll
+    return !this.touchTracker.isScrolling;
   }
 
   /**
    * Handle touch moved event
    */
   touchMoved(event) {
-    if (!this.isMobile() || !this.isScrolling) return true;
+    if (!this.touchTracker) return true;
 
     const resourcesSection = select('.resources-section');
     if (!resourcesSection || !touches || touches.length === 0) return true;
 
     const touch = touches[0];
-    const deltaY = this.touchStartY - touch.y;
+    const deltaY = this.touchTracker.lastY - touch.y;
+    const deltaX = Math.abs(this.touchTracker.startX - touch.x);
+    const timeDelta = millis() - this.touchTracker.startTime;
 
-    // Update scroll position
+    // Calculate scroll velocity (pixels per millisecond)
+    this.touchTracker.scrollVelocity = deltaY / Math.max(1, timeDelta);
+
+    // If significant horizontal movement, cancel potential link activation
+    if (deltaX > 10) {
+      this.touchTracker.targetLink = null;
+    }
+
+    // Handle scrolling with enhanced sensitivity
     if (this.isScrolling) {
-      resourcesSection.elt.scrollTop += deltaY;
-      this.touchStartY = touch.y;
-      return false; // Prevent default to avoid double scrolling
+      // Smooth scrolling with momentum
+      const scrollSpeed = constrain(deltaY * 1.2, -50, 50);
+      resourcesSection.elt.scrollBy(0, scrollSpeed);
+      return false; // Prevent default scrolling
     }
 
     return true;
@@ -365,10 +407,26 @@ class LastScene {
   /**
    * Handle touch ended event
    */
-  touchEnded() {
+  touchEnded(event) {
+    // Check if this was a tap on a link
+    if (this.touchedLink && millis() - this.touchStartTime < 300) {
+      const deltaY = Math.abs(touches && touches[0] ? touches[0].y - this.touchStartY : 0);
+      const deltaX = Math.abs(touches && touches[0] ? touches[0].x - this.touchStartX : 0);
+      
+      // If movement was minimal, trigger the link
+      if (deltaY < 10 && deltaX < 10) {
+        this.touchedLink.click();
+      }
+    }
+
     // Reset touch tracking variables
     this.touchStartY = null;
+    this.touchStartX = null;
+    this.lastTouchY = null;
+    this.touchStartTime = null;
     this.isScrolling = false;
+    this.touchedLink = null;
+    
     return true;
   }
 
