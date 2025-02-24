@@ -84,7 +84,7 @@ class LastScene {
         const margin = this.layout.spacing.getSectionMargin();
         return {
           x: width * margin,
-          y: height * (this.isMobile() ? 0.5 : 0.4)
+          y: height * (this.isMobile() ? 0.4 : 0.4)
         };
       }
     }
