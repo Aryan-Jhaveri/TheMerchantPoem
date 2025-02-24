@@ -527,4 +527,10 @@ class JourneyScene {
       }
     }
   }
+
+  exit() {
+    // Clear the stars array
+    // Clear the canvas
+    clear();
+  }
 } 

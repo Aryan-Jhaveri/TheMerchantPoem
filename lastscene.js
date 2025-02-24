@@ -84,6 +84,11 @@ class LastScene {
   this.font = null;
   }
 
+  enter() {
+    //this.isActive = true;
+    this.preload();
+    this.setup();
+  }
   /**
  * Preload assets before setup
  */
@@ -281,6 +286,8 @@ class LastScene {
     // Clear the tracking array
     this.domElements = [];
     
+    this.star = []; // Reset
+
     // Remove any elements that might have been missed
     selectAll('.about-section').forEach(el => el.remove());
     selectAll('.resources-section').forEach(el => el.remove());
