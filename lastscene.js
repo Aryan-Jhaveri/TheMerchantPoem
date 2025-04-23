@@ -106,7 +106,7 @@ class LastScene {
   this.hideWheelTimeout = null;
   }
 
-  // Improved mobile scrolling implementation
+  // Simplified and improved mobile scrolling
   enableMobileScrolling() {
     // Get the resources container element
     const resourcesContainer = select('.resources-section');
@@ -115,299 +115,88 @@ class LastScene {
     // Get the actual DOM element
     const containerElement = resourcesContainer.elt;
     
-    // Stop p5.js from preventing default touch behavior
-    // This is critical for enabling native scrolling
+    // CRITICAL: Completely remove p5's touch event prevention on this container
+    // This allows native browser scrolling to work properly
+    containerElement.style.touchAction = 'auto';
+    
+    // Stop p5.js from preventing default touch behavior by capturing events
+    // at the container level and stopping propagation to p5
     ['touchstart', 'touchmove', 'touchend'].forEach(eventType => {
       containerElement.addEventListener(eventType, (e) => {
-        // Allow event to propagate but don't prevent default
+        // Don't let the event bubble up to p5's handlers
         e.stopPropagation();
       }, { passive: true });
     });
     
-    // Ensure the container has proper CSS for scrolling
-    resourcesContainer.style('overflow-y', 'scroll');
+    // Enhanced mobile scrolling behavior
+    resourcesContainer.style('overflow-y', 'scroll'); // Use 'scroll' instead of 'auto' on mobile
     resourcesContainer.style('-webkit-overflow-scrolling', 'touch'); // iOS momentum scrolling
     resourcesContainer.style('overscroll-behavior', 'contain'); // Prevent scroll chain
+    resourcesContainer.style('scroll-behavior', 'smooth'); // Smooth scrolling
     
-    // Set appropriate height for mobile vs desktop
-    resourcesContainer.style('max-height', this.isMobile() ? '50vh' : '60vh');
+    // Make sure touch actions work as expected
+    resourcesContainer.style('touch-action', 'pan-y'); // Optimize for vertical touch gestures
     
-    // Add padding to ensure content can be scrolled completely
+    // Set appropriate sizing for the container based on device
+    resourcesContainer.style('max-height', this.isMobile() ? '45vh' : '60vh'); // Reduced height on mobile
+    
+    // Create a better scrollable area with padding
     const contentContainer = select('.resources-section > div:last-child');
     if (contentContainer) {
-      contentContainer.style('padding-bottom', '100px');
+      contentContainer.style('padding-bottom', '100px'); // Add extra space at the bottom
+      contentContainer.style('padding-top', '10px'); // Small padding at the top
     }
     
-    // Add subtle scroll indicator that fades out
+    // Add swipe indicator only on mobile
     if (this.isMobile()) {
-      // Remove existing scroll indicator if it exists
+      // Remove any existing indicators
       selectAll('.scroll-indicator').forEach(el => el.remove());
       
-      const scrollIndicator = createDiv('Scroll for more ↓');
+      // Create a simpler, more visible scroll indicator
+      const scrollIndicator = createDiv('↓ Swipe to see more ↓');
       this.domElements.push(scrollIndicator);
       scrollIndicator.class('scroll-indicator');
       scrollIndicator.parent(resourcesContainer);
       scrollIndicator.style('text-align', 'center');
-      scrollIndicator.style('color', '#ffffff80');
-      scrollIndicator.style('padding', '10px 0');
+      scrollIndicator.style('color', '#ffffffcc');
+      scrollIndicator.style('background', 'linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.4))');
+      scrollIndicator.style('padding', '8px 0');
       scrollIndicator.style('font-size', '14px');
       scrollIndicator.style('position', 'sticky');
       scrollIndicator.style('top', '0');
-      scrollIndicator.style('background-color', 'rgba(0,0,0,0.5)');
+      scrollIndicator.style('margin-bottom', '5px');
+      scrollIndicator.style('border-radius', '0 0 8px 8px');
       scrollIndicator.style('z-index', '100');
-      scrollIndicator.style('pointer-events', 'none');
-      scrollIndicator.style('transition', 'opacity 1s ease-out');
+      scrollIndicator.style('pointer-events', 'none'); // Don't interfere with touch events
+      scrollIndicator.style('transition', 'opacity 0.5s ease');
       
-      // Auto-hide the scroll indicator after 3 seconds
-      setTimeout(() => {
-        scrollIndicator.style('opacity', '0');
-      }, 3000);
+      // Automatically hide the indicator after user scrolls a bit
+      containerElement.addEventListener('scroll', () => {
+        if (containerElement.scrollTop > 20) {
+          scrollIndicator.style('opacity', '0');
+        } else {
+          scrollIndicator.style('opacity', '1');
+        }
+      });
+    }
+    
+    // Simple inertia scrolling for desktop without competing with mobile behavior
+    if (!this.isMobile()) {
+      containerElement.addEventListener('wheel', function(e) {
+        if (e.deltaMode === 1) {
+          // For Firefox compatibility
+          e.preventDefault();
+          containerElement.scrollTop += e.deltaY * 10;
+        }
+      }, { passive: false });
     }
   }
 
-  updateHandlePosition(scrollHandle, container, maxTop) {
-    const scrollHeight = container.scrollHeight - container.clientHeight;
-    if (scrollHeight <= 0) return; // Avoid division by zero
-    
-    const scrollPercentage = container.scrollTop / scrollHeight;
-    const newTop = scrollPercentage * maxTop;
-    scrollHandle.style('top', `${newTop}px`);
-  }
+  // Removed all scroll wheel related methods - using native scrolling instead
 
+  // Removed scroll wheel - using native scrolling instead
 
-  setupScrollWheelHandlers(resourcesContainer, upButton, downButton, scrollHandle, scrollTrack, wheelContainer) {
-    // Variables for tracking scroll state
-    let isDragging = false;
-    let startY = 0;
-    let startTop = 0;
-    const trackHeight = 60;
-    const handleHeight = 16;
-    const maxTop = trackHeight - handleHeight;
-    
-    // Function to scroll the container
-    const scrollResources = (delta) => {
-      const container = resourcesContainer.elt;
-      container.scrollTop += delta;
-      this.updateHandlePosition(scrollHandle, container, maxTop);
-    };
-    
-    // Function to scroll to a specific percentage
-    const scrollToPercent = (percentage) => {
-      const container = resourcesContainer.elt;
-      const scrollHeight = container.scrollHeight - container.clientHeight;
-      container.scrollTop = scrollHeight * percentage;
-      this.updateHandlePosition(scrollHandle, container, maxTop);
-    };
-    
-    // Update handle position when resources are scrolled
-    resourcesContainer.elt.addEventListener('scroll', () => {
-      if (!isDragging) {
-        this.updateHandlePosition(scrollHandle, resourcesContainer.elt, maxTop);
-      }
-    });
-    
-    // Up button touch/click event - simplified with passive touch events
-    upButton.elt.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      scrollResources(-80); // Scroll up by 80px
-      
-      // Active state
-      upButton.style('background-color', 'rgba(100, 181, 246, 0.9)');
-      setTimeout(() => {
-        upButton.style('background-color', 'rgba(100, 181, 246, 0.6)');
-      }, 200);
-    });
-    
-    // Down button touch/click event - simplified with passive touch events  
-    downButton.elt.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      scrollResources(80); // Scroll down by 80px
-      
-      // Active state
-      downButton.style('background-color', 'rgba(100, 181, 246, 0.9)');
-      setTimeout(() => {
-        downButton.style('background-color', 'rgba(100, 181, 246, 0.6)');
-      }, 200);
-    });
-    
-    // Handle pointer events for the scroll handle (works for both touch and mouse)
-    const handleElement = scrollHandle.elt;
-    
-    // Pointer down event
-    handleElement.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      isDragging = true;
-      startY = e.clientY;
-      startTop = parseInt(scrollHandle.style('top')) || 0;
-      
-      // Add active styling
-      scrollHandle.style('background-color', 'rgba(100, 181, 246, 0.8)');
-      
-      // Show the scroll wheel while dragging
-      this.showScrollWheel(wheelContainer);
-    });
-    
-    // Pointer move event
-    document.addEventListener('pointermove', (e) => {
-      if (!isDragging) return;
-      
-      const deltaY = e.clientY - startY;
-      let newTop = startTop + deltaY;
-      
-      // Constrain to track
-      newTop = Math.max(0, Math.min(maxTop, newTop));
-      
-      // Update handle position
-      scrollHandle.style('top', `${newTop}px`);
-      
-      // Calculate scroll percentage and update container
-      const scrollPercentage = newTop / maxTop;
-      scrollToPercent(scrollPercentage);
-    });
-    
-    // Pointer up event
-    document.addEventListener('pointerup', () => {
-      if (isDragging) {
-        isDragging = false;
-        scrollHandle.style('background-color', 'rgba(255, 255, 255, 0.8)');
-      }
-    });
-    
-    // Show wheel initially and set up auto-hide
-    this.showScrollWheel(wheelContainer);
-    
-    // Show wheel when interacting with the container
-    resourcesContainer.elt.addEventListener('pointerdown', () => {
-      this.showScrollWheel(wheelContainer);
-    });
-  }
-
-  showScrollWheel(wheelContainer) {
-    wheelContainer.style('opacity', '1');
-    clearTimeout(this.hideWheelTimeout);
-    this.hideWheelTimeout = setTimeout(() => {
-      wheelContainer.style('opacity', '0.3');
-    }, 5000);
-  }
-
-  createScrollWheel() {
-    // Only create scroll wheel for mobile devices
-    if (!this.isMobile()) return;
-    
-    // Get the resources container
-    const resourcesContainer = select('.resources-section');
-    if (!resourcesContainer) return;
-    
-    // Remove existing scroll wheel if it exists
-    selectAll('.scroll-wheel-container').forEach(el => el.remove());
-    
-    // Create scroll wheel container
-    const wheelContainer = createDiv('');
-    this.domElements.push(wheelContainer);
-    wheelContainer.class('scroll-wheel-container');
-    wheelContainer.style('position', 'fixed');
-    wheelContainer.style('right', '10px');
-    wheelContainer.style('top', '50%');
-    wheelContainer.style('transform', 'translateY(-50%)');
-    wheelContainer.style('width', '40px');
-    wheelContainer.style('height', '160px');
-    wheelContainer.style('background-color', 'rgba(0, 0, 0, 0.3)');
-    wheelContainer.style('border-radius', '20px');
-    wheelContainer.style('z-index', '1000');
-    wheelContainer.style('display', 'flex');
-    wheelContainer.style('flex-direction', 'column');
-    wheelContainer.style('justify-content', 'space-between');
-    wheelContainer.style('align-items', 'center');
-    wheelContainer.style('padding', '15px 0');
-    wheelContainer.style('backdrop-filter', 'blur(5px)');
-    wheelContainer.style('transition', 'opacity 0.5s ease');
-    wheelContainer.style('opacity', '1');
-    
-    // Up button
-    const upButton = createDiv('↑');
-    this.domElements.push(upButton);
-    upButton.class('wheel-up-button');
-    upButton.parent(wheelContainer);
-    upButton.style('width', '30px');
-    upButton.style('height', '30px');
-    upButton.style('border-radius', '50%');
-    upButton.style('background-color', 'rgba(100, 181, 246, 0.6)');
-    upButton.style('color', 'white');
-    upButton.style('display', 'flex');
-    upButton.style('justify-content', 'center');
-    upButton.style('align-items', 'center');
-    upButton.style('font-size', '20px');
-    upButton.style('cursor', 'pointer');
-    upButton.style('user-select', 'none');
-    
-    // Scroll track
-    const scrollTrack = createDiv('');
-    this.domElements.push(scrollTrack);
-    scrollTrack.class('wheel-track');
-    scrollTrack.parent(wheelContainer);
-    scrollTrack.style('width', '4px');
-    scrollTrack.style('height', '60px');
-    scrollTrack.style('background-color', 'rgba(255, 255, 255, 0.2)');
-    scrollTrack.style('border-radius', '2px');
-    scrollTrack.style('position', 'relative');
-    
-    // Scroll handle
-    const scrollHandle = createDiv('');
-    this.domElements.push(scrollHandle);
-    scrollHandle.class('wheel-handle');
-    scrollHandle.parent(scrollTrack);
-    scrollHandle.style('width', '16px');
-    scrollHandle.style('height', '16px');
-    scrollHandle.style('background-color', 'rgba(255, 255, 255, 0.8)');
-    scrollHandle.style('border-radius', '50%');
-    scrollHandle.style('position', 'absolute');
-    scrollHandle.style('left', '50%');
-    scrollHandle.style('transform', 'translateX(-50%)');
-    scrollHandle.style('top', '0');
-    scrollHandle.style('cursor', 'pointer');
-    scrollHandle.style('transition', 'background-color 0.2s ease');
-    
-    // Down button
-    const downButton = createDiv('↓');
-    this.domElements.push(downButton);
-    downButton.class('wheel-down-button');
-    downButton.parent(wheelContainer);
-    downButton.style('width', '30px');
-    downButton.style('height', '30px');
-    downButton.style('border-radius', '50%');
-    downButton.style('background-color', 'rgba(100, 181, 246, 0.6)');
-    downButton.style('color', 'white');
-    downButton.style('display', 'flex');
-    downButton.style('justify-content', 'center');
-    downButton.style('align-items', 'center');
-    downButton.style('font-size', '20px');
-    downButton.style('cursor', 'pointer');
-    downButton.style('user-select', 'none');
-    
-    // Add scroll wheel event handlers
-    this.setupScrollWheelHandlers(resourcesContainer, upButton, downButton, scrollHandle, scrollTrack, wheelContainer);
-  }
-
-  enter() {
-    console.log('Entering LastScene...');
-    // Ensure clean slate
-    this.exit();
-    
-    // Small delay to ensure DOM is ready
-    setTimeout(() => {
-      // Create section containers
-      this.createAboutSection();
-      this.createResourcesSection();
-      
-      // Make sure the scroll wheel is visible initially for mobile
-      if (this.isMobile()) {
-        const wheelContainer = select('.scroll-wheel-container');
-        if (wheelContainer) {
-          wheelContainer.style('opacity', '1');
-        }
-      }
-    }, 50);
-  }
+  // This duplicate enter method can be removed
 
   improveMobileExperience() {
     if (!this.isMobile()) return;
@@ -416,111 +205,49 @@ class LastScene {
     const resourcesContainer = select('.resources-section');
     if (!resourcesContainer) return;
     
-    // Additional mobile-friendly styles
+    // Simple mobile-friendly adjustments
     resourcesContainer.style('padding-bottom', '30px');
-    resourcesContainer.style('padding-right', '50px'); // Make room for scroll wheel
     
     // Increase touch target size for links on mobile
     selectAll('.resources-section a').forEach(a => {
-      a.style('padding', '15px 0');
+      // Make links easier to tap
+      a.style('padding', '12px 0');
       a.style('margin-bottom', '5px');
       a.style('border-bottom', '1px solid rgba(255, 255, 255, 0.1)');
+      a.style('display', 'block'); // Full width
       
-      // Variables for touch handling with reduced sensitivity
-      let touchStartX = 0;
-      let touchStartY = 0;
-      let touchStartTime = 0;
-      const touchThreshold = 10; // pixels - movement allowed before canceling click
-      const longPressThreshold = 500; // milliseconds - time required for "intentional" click
-      let isLongPressTriggered = false;
-      let longPressTimer = null;
+      // Find the link icon that was created with each link
+      // Search for the span element created inside the parent wrapper
+      let linkIcon = null;
       
-      // Handle touch start
-      a.elt.addEventListener('touchstart', (e) => {
-        // Store initial touch position and time
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        touchStartTime = Date.now();
-        isLongPressTriggered = false;
-        
-        // Show visual feedback that touch was detected
-        a.style('color', this.styles.link.hoverColor);
-        
-        // Set up long press timer
-        longPressTimer = setTimeout(() => {
-          isLongPressTriggered = true;
-          
-          // Add extra visual feedback for long press
-          a.style('text-decoration', 'underline');
-          
-          // Optional: Add subtle vibration feedback if available
-          if (navigator.vibrate) {
-            navigator.vibrate(50); // 50ms vibration
-          }
-        }, longPressThreshold);
-      }, { passive: true });
+      // First try the direct approach
+      const wrapper = a.parent();
+      if (wrapper) {
+        // Look for span elements in the wrapper
+        selectAll('span', wrapper.elt).forEach(span => {
+          // This is likely our link icon
+          linkIcon = span;
+        });
+      }
       
-      // Handle touch move - cancel if moving too much
-      a.elt.addEventListener('touchmove', (e) => {
-        if (longPressTimer) {
-          // Calculate distance moved
-          const deltaX = Math.abs(e.touches[0].clientX - touchStartX);
-          const deltaY = Math.abs(e.touches[0].clientY - touchStartY);
-          
-          // If moved beyond threshold, cancel the long press and revert styling
-          if (deltaX > touchThreshold || deltaY > touchThreshold) {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-            a.style('color', this.styles.link.color);
-            a.style('text-decoration', 'none');
-          }
-        }
-      }, { passive: true });
-      
-      // Handle touch end
-      a.elt.addEventListener('touchend', (e) => {
-        // Clear the long press timer
-        clearTimeout(longPressTimer);
-        
-        // Remove visual feedback
-        a.style('text-decoration', 'none');
-        
-        // Calculate touch duration
-        const touchDuration = Date.now() - touchStartTime;
-        
-        // Only trigger link if it was a long press or we're not using long press mode
-        if (isLongPressTriggered) {
-          e.preventDefault(); // Prevent default only when we're taking action
-          
-          // Reset color with slight delay for visual feedback
-          setTimeout(() => {
-            a.style('color', this.styles.link.color);
-          }, 150);
-          
-          // Get URL and open in new tab with slight delay
-          const url = a.elt.getAttribute('href');
-          if (url) {
-            setTimeout(() => {
-              window.open(url, '_blank');
-            }, 50);
-          }
-        } else {
-          // Not a long press, just reset the style
-          a.style('color', this.styles.link.color);
-        }
-      });
-      
-      // Handle touch cancel
-      a.elt.addEventListener('touchcancel', () => {
-        clearTimeout(longPressTimer);
-        a.style('color', this.styles.link.color);
-        a.style('text-decoration', 'none');
-      });
-      
-      // Keep mouse events for desktop
-      a.mouseOver(() => a.style('color', this.styles.link.hoverColor));
-      a.mouseOut(() => a.style('color', this.styles.link.color));
+      // If we found the icon, enhance it for mobile
+      if (linkIcon) {
+        linkIcon.style('opacity', '0.9');
+        linkIcon.style('margin-left', '8px');
+        linkIcon.style('font-size', '16px'); // Make it more visible
+      }
     });
+    
+    // Make all link descriptions easier to read on mobile
+    selectAll('.resources-section p').forEach(p => {
+      p.style('font-size', '14px');
+      p.style('line-height', '1.4');
+      p.style('margin-bottom', '15px');
+    });
+    
+    // Ensure container has appropriate dimensions for mobile
+    resourcesContainer.style('height', '50vh');
+    resourcesContainer.style('width', '90%');
   }
 
   /**
@@ -537,11 +264,29 @@ class LastScene {
     createCanvas(windowWidth, windowHeight);
     this.initializeStars();
 
-    // This prevents p5.js from blocking touch events
-    const canvas = createCanvas(windowWidth, windowHeight);
-    canvas.style('touch-action', 'auto');
+    // Ensure the canvas doesn't interfere with touch events
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      // Allow all touch actions including native scrolling
+      canvas.style.touchAction = 'auto';
+      
+      // Make sure we're not preventing default touch events in this scene
+      canvas.addEventListener('touchstart', (e) => {
+        // Only stop propagation for the canvas itself, not its children
+        if (e.target === canvas) {
+          e.stopPropagation();
+        }
+      }, { passive: true });
+      
+      canvas.addEventListener('touchmove', (e) => {
+        // Only stop propagation for the canvas itself, not its children
+        if (e.target === canvas) {
+          e.stopPropagation();
+        }
+      }, { passive: true });
+    }
     
-    // This prevents the canvas from capturing all touch events
+    // Ensure body allows touch actions too
     document.body.style.touchAction = 'auto';
   }
 
@@ -556,9 +301,17 @@ class LastScene {
     
     // Small delay to ensure DOM is ready
     setTimeout(() => {
-      // Create section containers
+      // Create section containers - same for both desktop and mobile
       this.createAboutSection();
       this.createResourcesSection();
+      
+      // Enable mobile-specific enhancements
+      this.enableMobileScrolling();
+      
+      // Apply mobile-specific styles if needed
+      if (this.isMobile()) {
+        this.improveMobileExperience();
+      }
     }, 50);
   }
 
@@ -612,141 +365,178 @@ class LastScene {
     const position = this.layout.positioning.getResourcesPosition();
     const contentWidth = this.layout.spacing.getContentWidth();
     
-    // Create outer container with fixed height
+    // Create outer container
     const resourcesContainer = createDiv('');
     this.domElements.push(resourcesContainer);
     resourcesContainer.class('resources-section');
     resourcesContainer.position(position.x, position.y);
-    resourcesContainer.style('width', `${contentWidth * 100}%`);
-    resourcesContainer.style('height', '60vh'); // Set fixed height
-    resourcesContainer.style('overflow-y', 'auto'); // Enable vertical scrolling
-    resourcesContainer.style('padding-right', '20px'); // Add padding for scrollbar
-    resourcesContainer.style('-webkit-overflow-scrolling', 'touch'); // Enable momentum scrolling on iOS
-    resourcesContainer.style('touch-action', 'pan-y'); // Optimize touch handling
-    resourcesContainer.style('user-select', 'none'); // Prevent text selection while scrolling
-    resourcesContainer.style('cursor', 'default'); // Default cursor
-    resourcesContainer.style('overscroll-behavior', 'contain'); // Prevent scroll chain
-    resourcesContainer.style('scroll-behavior', 'smooth'); // Smooth scrolling
-    resourcesContainer.style('-webkit-tap-highlight-color', 'rgba(0,0,0,0)'); // Remove tap highlight on mobile
     
-    // Mobile-specific styles
+    // Set consistent container width for all devices
     if (this.isMobile()) {
-      resourcesContainer.style('overflow-y', 'scroll');
-      resourcesContainer.style('height', '50vh'); // Slightly smaller height on mobile
-      resourcesContainer.style('padding-right', '10px'); // Smaller padding on mobile
+      // Mobile-optimized width
+      resourcesContainer.style('width', '90%');
+      resourcesContainer.style('max-width', '450px');
+    } else {
+      // Desktop width
+      resourcesContainer.style('width', `${contentWidth * 100}%`);
     }
     
-    // Add smooth scrolling for non-touch devices
-    if (!this.isMobile()) {
-      resourcesContainer.style('scroll-behavior', 'smooth');
-    }
-
-    // Style the scrollbar
-    resourcesContainer.style('scrollbar-width', 'thin');
-    resourcesContainer.style('scrollbar-color', '#ffffff40 transparent');
-
-    // Webkit scrollbar styles
-    resourcesContainer.style('&::-webkit-scrollbar', '{ width: 8px; }');
-    resourcesContainer.style('&::-webkit-scrollbar-track', '{ background: transparent; }');
-    resourcesContainer.style('&::-webkit-scrollbar-thumb', '{ background: #ffffff40; border-radius: 4px; }');
-
+    // Set appropriate height (same content, different proportions)
+    resourcesContainer.style('height', '50vh'); 
+    
+    // Consistent scrolling properties for all devices
+    resourcesContainer.style('overflow-y', 'scroll');
+    resourcesContainer.style('padding-right', '15px');
+    resourcesContainer.style('-webkit-overflow-scrolling', 'touch');
+    resourcesContainer.style('overscroll-behavior', 'contain');
+    
+    // Add subtle border for better visibility
+    resourcesContainer.style('border-radius', '8px');
+    resourcesContainer.style('background-color', 'rgba(0, 0, 0, 0.2)');
+    resourcesContainer.style('box-shadow', '0 2px 10px rgba(0, 0, 0, 0.3)');
+    
+    // Simple, clean section title
     const resourcesTitle = createElement('h2', this.sections.resources.title);
     this.domElements.push(resourcesTitle);
     resourcesTitle.parent(resourcesContainer);
     resourcesTitle.style('color', '#ffffff');
     resourcesTitle.style('font-size', `${this.styles.heading.getSize()}px`);
-    resourcesTitle.style('margin-bottom', '20px');
+    resourcesTitle.style('margin', '15px 0');
+    resourcesTitle.style('padding', '0 15px');
 
     // Create inner content container
     const contentContainer = createDiv('');
     this.domElements.push(contentContainer);
     contentContainer.parent(resourcesContainer);
-    contentContainer.style('padding-bottom', '20px'); // Add bottom padding for last item
+    contentContainer.style('padding', '0 15px 30px 15px');
 
-    // Create a timestamp to prevent duplicate touch events (debounce)
+    // Create a timestamp to prevent duplicate touch events
     let lastTouchTime = 0;
     const touchDebounceTime = 300; // milliseconds
     
+    // Create links
     this.sections.resources.links.forEach(link => {
+      // Link container for each resource
       const linkContainer = createDiv('');
       this.domElements.push(linkContainer);
       linkContainer.parent(contentContainer);
-      linkContainer.style('margin-bottom', this.isMobile() ? '15px' : '20px');
+      linkContainer.style('margin-bottom', '20px');
+      linkContainer.style('padding-bottom', '15px');
+      linkContainer.style('border-bottom', '1px solid rgba(255, 255, 255, 0.1)');
 
+      // Link wrapper with icon
+      const linkWrapper = createDiv('');
+      this.domElements.push(linkWrapper);
+      linkWrapper.parent(linkContainer);
+      linkWrapper.style('display', 'flex');
+      linkWrapper.style('align-items', 'center');
+      
+      // Create the actual link
       const a = createA(link.url, link.title);
       this.domElements.push(a);
-      a.parent(linkContainer);
+      a.parent(linkWrapper);
       a.style('color', this.styles.link.color);
       a.style('text-decoration', 'none');
       a.style('font-size', `${this.styles.text.getSize()}px`);
-      a.style('padding', this.isMobile() ? '12px 0' : '8px 0'); // Increased touch target size
-      a.style('display', 'block'); // Make the full area clickable
-      a.style('cursor', 'pointer'); // Show pointer cursor
-      a.style('touch-action', 'manipulation'); // Optimize for touch
-      a.style('-webkit-tap-highlight-color', 'rgba(100,181,246,0.2)'); // Subtle tap highlight
+      a.style('padding', '10px 0');
+      a.style('flex-grow', '1');
+      a.style('font-weight', 'bold');
+      
+      // Add external link icon
+      const linkIcon = createSpan('↗');
+      this.domElements.push(linkIcon);
+      linkIcon.parent(linkWrapper);
+      linkIcon.style('color', this.styles.link.color);
+      linkIcon.style('font-size', this.styles.text.getSize() + 'px');
+      linkIcon.style('margin-left', '8px');
+      linkIcon.style('opacity', '0.7');
       
       // Mouse events for desktop
       a.mouseOver(() => a.style('color', this.styles.link.hoverColor));
       a.mouseOut(() => a.style('color', this.styles.link.color));
       
-      // Enhanced touch events
-      a.attribute('data-url', link.url); // Store URL as data attribute
+      // Store URL as data attribute for touch handling
+      a.attribute('data-url', link.url);
       
-      // Add direct touch event handlers
-      const linkElement = a.elt; // Get the actual DOM element
+      // Get actual DOM element for adding native event listeners
+      const linkElement = a.elt;
       
-      // Add touch start event
+      // Improved touch handling for links on mobile
+      let touchStartY = 0;
+      let touchStartX = 0;
+      let hasMoved = false;
+      const moveThreshold = 10; // pixels to consider a scroll vs. a tap
+      
+      // Touch start - track position without preventing defaults
       linkElement.addEventListener('touchstart', (e) => {
-        a.style('color', this.styles.link.hoverColor);
-        // Don't prevent default here to allow scrolling if needed
-      }, { passive: true }); // Using passive to improve performance
-      
-      // Add touch end event with navigation
-      linkElement.addEventListener('touchend', (e) => {
-        const currentTime = new Date().getTime();
+        // Record start position
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        hasMoved = false;
         
-        // Debounce touch events to prevent double-firing
-        if (currentTime - lastTouchTime > touchDebounceTime) {
-          lastTouchTime = currentTime;
+        // Visual feedback
+        a.style('color', this.styles.link.hoverColor);
+      }, { passive: true });
+      
+      // Touch move - detect if user is scrolling
+      linkElement.addEventListener('touchmove', (e) => {
+        // Calculate distance moved
+        const dy = Math.abs(e.touches[0].clientY - touchStartY);
+        const dx = Math.abs(e.touches[0].clientX - touchStartX);
+        
+        // If moved beyond threshold, consider it a scroll not a tap
+        if (dy > moveThreshold || dx > moveThreshold) {
+          hasMoved = true;
+          a.style('color', this.styles.link.color); // Reset color during scroll
+        }
+      }, { passive: true });
+      
+      // Touch end - only activate link if it wasn't a scroll
+      linkElement.addEventListener('touchend', (e) => {
+        // Reset appearance
+        a.style('color', this.styles.link.color);
+        
+        // Only activate if it wasn't a scroll attempt
+        if (!hasMoved) {
+          const currentTime = new Date().getTime();
           
-          // Change color back
-          a.style('color', this.styles.link.color);
-          
-          // Prevent ghost clicks
-          e.preventDefault();
-          
-          // Get URL from data attribute
-          const url = e.currentTarget.getAttribute('data-url');
-          
-          // Navigate after a slight delay to show the touch feedback
-          setTimeout(() => {
-            window.open(url, '_blank');
-          }, 50);
+          // Debounce to prevent double-activation
+          if (currentTime - lastTouchTime > touchDebounceTime) {
+            lastTouchTime = currentTime;
+            
+            // Prevent default only when actually activating link
+            e.preventDefault();
+            
+            // Get URL and navigate
+            const url = e.currentTarget.getAttribute('data-url');
+            if (url) {
+              window.open(url, '_blank');
+            }
+          }
         }
       });
       
-      // Add touch cancel event
+      // Touch cancel - reset appearance
       linkElement.addEventListener('touchcancel', (e) => {
         a.style('color', this.styles.link.color);
       });
 
+      // Create description with consistent styling across devices
       const description = createP(link.description);
       this.domElements.push(description);
       description.parent(linkContainer);
       description.style('color', '#ffffff');
       description.style('margin-top', '5px');
-      description.style('font-size', `${this.styles.text.getSize() - 2}px`);
-      description.style('line-height', '1.6');
+      description.style('font-size', '14px'); // Consistent size across devices
+      description.style('line-height', '1.5');
+      description.style('opacity', '0.9');
       
       // Make description non-interactive for touch events
       description.style('pointer-events', 'none');
     });
     
-    // Add touch ended event to the p5 canvas
-    this.registerMethod('touchEnded', this);
+    // Enable mobile scrolling enhancements
     this.enableMobileScrolling();
-    this.createScrollWheel();
-    this.improveMobileExperience();
   }
   
   // Add this as a separate method to handle touch events globally
@@ -833,21 +623,30 @@ class LastScene {
    * Handle window resize event
    */
   windowResized() {
+    // Resize canvas
     resizeCanvas(windowWidth, windowHeight);
+    
+    // Clear previous layout
+    this.exit();
+    
+    // Recreate sections with updated dimensions
     this.createAboutSection();
     this.createResourcesSection();
     
-    // Force update the scroll wheel position
+    // Re-apply scrolling improvements
+    this.enableMobileScrolling();
+    
+    // Apply mobile-specific styles if needed
     if (this.isMobile()) {
-      setTimeout(() => {
-        const resourcesContainer = select('.resources-section');
-        const wheelContainer = select('.scroll-wheel-container');
-        if (resourcesContainer && wheelContainer) {
-          // Trigger a scroll event to update handle position
-          resourcesContainer.elt.dispatchEvent(new Event('scroll'));
-        }
-      }, 100);
+      this.improveMobileExperience();
     }
+    
+    // Ensure stars scale correctly
+    this.stars.forEach(star => {
+      if (typeof star.handleResize === 'function') {
+        star.handleResize();
+      }
+    });
   }
 
   /**
