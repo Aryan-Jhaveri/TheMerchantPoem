@@ -39,6 +39,11 @@ constructor() {
   this.font = null;
 }
 enter() {
+  console.log("WelcomeScene entered - resetting stars");
+  
+  // Reset stars array to ensure fresh layout every time
+  this.stars = [];
+  
   // Call preload when scene enters
   this.preload();
 }
@@ -106,9 +111,15 @@ checkAllAssetsLoaded() {
  * This function creates the star objects and adds them to the stars array
  */
 initializeStars() {
+  // Clear existing stars first to ensure a fresh layout
+  this.stars = [];
+  
+  // Create new stars
   for (let i = 0; i < VISUAL_SETTINGS.STAR_COUNT; i++) {
     this.stars.push(new Star());
   }
+  
+  console.log(`Created ${this.stars.length} new stars`);
 }
 
 /**
@@ -392,16 +403,29 @@ windowResized() {
 
 exit() {
   console.log('Cleaning up WelcomeScene...');
+  
   // Clear the stars array
   this.stars = [];
+  
   // Clear the clouds array
   this.clouds = [];
+  
+  // Reset floating merchant if it exists
+  if (this.floatingMerchant) {
+    this.floatingMerchant.velocity = createVector(0, 0);
+    this.floatingMerchant.initializeProperties();
+  }
+  
   // Reset wave properties
   this.yoff = VISUAL_SETTINGS.WAVE.Y_OFFSET_START;
   this.yRange = {
     min: 450,
     max: 460
   };
+  
+  // Set flag to reinitialize on next entry
+  this.isLoading = true;
+  
   // Clear the canvas
   clear();
 }

@@ -23,10 +23,18 @@ let globalYoff = VISUAL_SETTINGS.WAVE.Y_OFFSET_START;
 // Shared wave colors - unified color scheme
 const WAVE_COLORS = {
   UNIFIED: {
-    BASE: [40, 57, 92],    // Medium blue for all waves (from journey scene)
-    ALPHA: [300, 50]       // Alpha range for wave layers
+    BASE: [26, 33, 71],    // Medium blue for all waves 
+    ALPHA: [250, 600]       // Alpha range for wave layers
   }
 };
+
+// Tailwind blue palette for wave textures
+const WAVE_TINTS = [
+  [5, 22, 58],      // Oxford Blue (#05163A) - Darkest blue
+  [39, 47, 94],     // Delft Blue (#272F5E) - Dark blue
+  [34, 42, 88],     // Space Cadet (#222A58) - Deep blue
+  [144, 141, 198]   // Tropical Indigo (#908DC6) - Purple blue (for seafoam/shimmer)
+];
 
 /**
  * Star class handles the creation and animation of individual stars in the background
@@ -858,8 +866,8 @@ function drawWaves(options) {
     let xoff = 0;
     
     // Create wave vertices
-    vertex(-20, height);
-    for (let x = -20; x <= width + 20; x += VISUAL_SETTINGS.WAVE.STEP) {
+    vertex(-30, height);
+    for (let x = -30; x <= width + 30; x += VISUAL_SETTINGS.WAVE.STEP) {
       const y = map(
         noise(xoff, globalYoff + waveIndex * 0.5),
         0, 1,
@@ -915,15 +923,68 @@ function addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
     
     // Draw textured pixels from wave height to bottom
     for (let y = floor(waveHeight); y < height; y += pixelSize) {
-      const noiseVal = noise(0.06 * x * t, 0.03 * y + waveIndex * 0.5);
-      const brightness = map(noiseVal, 0, 2, 0.7, 1);
+      // Use noise to create a wavy pattern with different frequencies
+      const noiseVal = noise(0.09 * x * t, 0.03 * y + waveIndex * 0.5);
       
-      // Apply noise-based brightness to wave color
+      // Calculate distance from wave surface - for applying color gradient
+      const distanceFromSurface = y - waveHeight;
+      const halfWaveHeight = (height - waveHeight) / 2;
+      
+      // Determine color selection strategy based on depth and wave pattern
+      let tintIndex;
+      
+      // Top half of wave - more likely to have lighter colors
+      if (distanceFromSurface < halfWaveHeight) {
+        // Near the surface - calculate a gradient that favors lighter colors at the top
+        const surfaceRatio = 1 - (distanceFromSurface / halfWaveHeight); // 1 at surface, 0 at half-depth
+        
+        // Decide whether to use shimmer/seafoam effect (lightest color)
+        if (surfaceRatio > 0.7 && noiseVal > 0.75 && random() > 0.5) {
+          // Strong probability of light colors near the very top (seafoam/shimmer)
+          tintIndex = WAVE_TINTS.length - 1; // Tropical Indigo (lightest)
+        } 
+        else if (surfaceRatio > 0.4 && noiseVal > 0.8 && random() > 0.7) {
+          // Medium probability of light colors in middle of top half
+          tintIndex = WAVE_TINTS.length - 1; // Tropical Indigo (lightest)
+        }
+        else {
+          // Gradient from medium to light colors throughout top half
+          // Use the noise and surface ratio to create a natural-looking gradient
+          const topGradient = surfaceRatio * 0.7 + noiseVal * 0.3;
+          tintIndex = floor(map(topGradient, 0, 1, 1, WAVE_TINTS.length - 1));
+        }
+      } 
+      // Bottom half of wave - weighted heavily toward the darkest colors
+      else {
+        // Deeper water gets progressively darker
+        const depthRatio = constrain(map(distanceFromSurface, halfWaveHeight, height - waveHeight, 0, 1), 0, 1);
+        
+        // Make almost everything dark in the bottom half, with very rare lighter spots
+        if (noiseVal > 0.95 && random() > 0.95) {
+          // Very rare light shimmer in deep water
+          tintIndex = WAVE_TINTS.length - 2; // Second lightest
+        } else {
+          // Mostly dark, gets darker with depth
+          const darknessBias = depthRatio * 0.8 + pow(noiseVal, 2) * 0.2;
+          tintIndex = floor(map(darknessBias, 0, 1, 0, 1.5)); // Mostly indices 0-1 (darkest colors)
+        }
+      }
+      
+      // Ensure index is within bounds
+      const safeIndex = constrain(tintIndex, 0, WAVE_TINTS.length - 1);
+      
+      // Get the tint color
+      const [r, g, b] = WAVE_TINTS[safeIndex];
+      
+      // Apply slight brightness variation for additional texture
+      const brightness = map(noise(x * 0.05, y * 0.05, t), 0, 1, 0.9, 1.1);
+      
+      // Create fully opaque color with the tint
       const pixelColor = color(
-        red(waveColor) * brightness,
-        green(waveColor) * brightness,
-        blue(waveColor) * brightness,
-        alpha
+        r * brightness,
+        g * brightness, 
+        b * brightness,
+        255  // Fully opaque
       );
       
       fill(pixelColor);
