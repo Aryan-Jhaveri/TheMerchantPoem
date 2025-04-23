@@ -5,14 +5,266 @@ let volumeSlider;
 let isPlaying = false;
 let menuFont = null;
 
+// Touch tracking variables
 let touchStartY = null;
 let lastTouchY = null;
+let touchStartX = null;
+let lastTouchX = null;
 
 // Menu buttons
 let homeButton;
 let poemButton;
 let resourcesButton;
 let menuDiv;
+
+// Shared wave properties
+let globalYoff = VISUAL_SETTINGS.WAVE.Y_OFFSET_START;
+
+// Shared wave colors - unified color scheme
+const WAVE_COLORS = {
+  UNIFIED: {
+    BASE: [40, 57, 92],    // Medium blue for all waves (from journey scene)
+    ALPHA: [300, 50]       // Alpha range for wave layers
+  }
+};
+
+/**
+ * Star class handles the creation and animation of individual stars in the background
+ */
+class Star {
+  constructor() {
+    this.reset();
+    this.initializePosition();
+  }
+
+  initializePosition() {
+    // Store positions as percentages of window size for responsiveness
+    this.xPercent = random(0, 1);
+    this.yPercent = random(0, 1);
+    this.updatePosition();
+  }
+
+  reset() {
+    const windowDiagonal = sqrt(windowWidth * windowWidth + windowHeight * windowHeight);
+    this.baseSize = random(VISUAL_SETTINGS.STAR_SIZE.MIN, VISUAL_SETTINGS.STAR_SIZE.MAX) * 
+                    (windowDiagonal / 1500);
+    
+    this.opacity = map(
+      this.baseSize,
+      VISUAL_SETTINGS.STAR_SIZE.MIN * (windowDiagonal / 1500),
+      VISUAL_SETTINGS.STAR_SIZE.MAX * (windowDiagonal / 1500),
+      VISUAL_SETTINGS.STAR_OPACITY.MIN,
+      VISUAL_SETTINGS.STAR_OPACITY.MAX
+    );
+
+    this.twinkleSpeed = random(0.02, 0.05);
+    this.twinklePhase = random(TWO_PI);
+  }
+
+  updatePosition() {
+    this.x = this.xPercent * windowWidth;
+    this.y = this.yPercent * windowHeight;
+  }
+
+  handleResize() {
+    this.reset();
+    this.updatePosition();
+  }
+
+  update() {
+    this.opacity = map(
+      sin(frameCount * this.twinkleSpeed + this.twinklePhase),
+      -1, 1,
+      VISUAL_SETTINGS.STAR_OPACITY.MIN,
+      VISUAL_SETTINGS.STAR_OPACITY.MAX
+    );
+  }
+
+  display() {
+    noStroke();
+    fill(255, 255, 255, this.opacity);
+    ellipse(this.x, this.y, this.baseSize, this.baseSize);
+  }
+}
+
+/**
+* Cloud class manages individual cloud elements, including their movement and opacity
+*/
+class Cloud {
+constructor(img, speed) {
+    this.img = img;
+    this.speed = speed * 0.3;
+    this.initializeCloud();
+}
+
+initializeCloud() {
+    this.xPercent = random(0, 1);
+    this.yPercent = random(0, 0.4);
+    this.updateDimensions();
+    
+    // Animation properties
+    this.opacity = 0;
+    this.targetOpacity = random(300, 400);
+    this.fadeSpeed = 0.005;
+    this.ySpeed = random(0.001, 0.002);
+    this.yAmplitude = random(5, 10);
+    
+    // Lifecycle management
+    this.lifespan = random(300, 600);
+    this.age = 0;
+}
+
+updateDimensions() {
+    this.x = this.xPercent * windowWidth;
+    this.y = this.yPercent * windowHeight;
+    this.originalY = this.y;
+    this.width = windowWidth * 0.2;
+    this.height = this.width * 0.66;
+}
+
+update() {
+    this.age++;
+    this.x += this.speed;
+    this.y = this.originalY + sin(frameCount * this.ySpeed) * this.yAmplitude;
+
+    // Handle cloud lifecycle
+    if (this.age < 60) {
+    this.opacity = lerp(this.opacity, this.targetOpacity, 0.02);
+    } else if (this.age > this.lifespan - 60) {
+    this.opacity = lerp(this.opacity, 0, 0.02);
+    }
+
+    if (this.age > this.lifespan || this.x > windowWidth + this.width) {
+    this.reset();
+    }
+}
+
+reset() {
+    this.initializeCloud();
+}
+
+handleResize() {
+    this.updateDimensions();
+}
+
+display() {
+    push();
+    if (this.img && this.img.width > 0) {
+    tint(255, this.opacity);
+    image(this.img, this.x, this.y, this.width, this.height);
+    }
+    pop();
+}
+}
+
+/**
+* Moon class handles the moon's display and gentle floating animation
+*/
+class Moon {
+constructor(img) {
+    this.img = img;
+    this.calculateDimensions();
+    this.floatSpeed = 0.002;
+    this.floatAmplitude = 15;
+    this.floatOffset = 0;
+}
+
+calculateDimensions() {
+    this.leftBoundary = (windowWidth * 5) / 7;
+    this.size = windowWidth * 0.2;
+    this.x = this.leftBoundary + (windowWidth - this.leftBoundary) / 2;
+    this.y = windowHeight * 0.15;
+}
+
+update() {
+    this.floatOffset = sin(frameCount * this.floatSpeed) * this.floatAmplitude;
+}
+
+display() {
+    if (this.img) {
+      push();
+      tint(255, 220);
+      image(
+        this.img,
+        this.x - this.size / 2,
+        this.y + this.floatOffset - this.size / 2,
+        this.size,
+        this.size
+      );
+      pop();
+    }
+}
+
+handleResize() {
+    this.calculateDimensions();
+}
+}
+
+/**
+* FloatingImage class manages the merchant character's movement and interaction with waves
+*/
+class FloatingImage {
+  constructor(img) {
+      this.img = img;
+      this.initializeProperties();
+  }
+
+  initializeProperties() {
+      // Position constraints
+      this.xMin = 200;
+      this.xMax = 500;
+      this.yMin = 450;
+      this.yMax = 600;
+
+      // Current position and dimensions
+      this.x = (this.xMin + this.xMax) / 2;
+      this.y = (this.yMin + this.yMax) / 2;
+      this.width = 230;
+      this.height = 200;
+
+      // Physics properties
+      this.velocity = createVector(0, 0);
+      this.dampening = 0.96;
+      this.waveInfluenceStrength = 1;
+      this.prevWaveHeight = 1;
+  }
+
+  getWaveHeightAtPosition(xoff, yoff) {
+      return map(
+      noise(this.x * VISUAL_SETTINGS.WAVE.NOISE_SCALE + xoff, yoff),
+      0, 1,
+      this.yRange.min,
+      this.yRange.max
+      );
+  }
+
+  update() {
+      let currentWaveHeight = this.getWaveHeightAtPosition(0, this.yoff);
+      let waveVelocity = (currentWaveHeight - this.prevWaveHeight) * this.waveInfluenceStrength;
+
+      this.velocity.y += waveVelocity;
+      this.x += this.velocity.x;
+      this.y += this.velocity.y;
+
+      this.x = constrain(this.x, this.xMin, this.xMax);
+      this.y = constrain(this.y, this.yMin, this.yMax);
+
+      this.velocity.mult(this.dampening);
+      this.prevWaveHeight = currentWaveHeight;
+  }
+
+  display() {
+      push();
+      image(
+      this.img,
+      this.x - this.width / 2,
+      this.y - this.height / 2,
+      this.width,
+      this.height
+      );
+      pop();
+  }
+}
 
 /**
  * Preload
@@ -262,6 +514,46 @@ function mousePressed() {
 }
 
 /**
+ * Handle keyboard input for merchant movement
+ */
+function keyPressed() {
+  // Check if we're in a scene that has a floating merchant
+  if (mgr && mgr.scene && mgr.scene.oScene) {
+    const actualScene = mgr.scene.oScene;
+    
+    // Look for the merchant in common places in the scene
+    const merchant = actualScene.merchant || actualScene.floatingMerchant;
+    
+    // If the scene has a merchant property
+    if (merchant) {
+      const pushForce = 4; // Lower force to work with the existing dampening
+      
+      // Apply force to the merchant's existing velocity (don't override it)
+      if (keyCode === UP_ARROW || key === 'w' || key === 'W') {
+        merchant.velocity.y -= pushForce;
+      } else if (keyCode === DOWN_ARROW || key === 's' || key === 'S') {
+        merchant.velocity.y += pushForce;
+      } else if (keyCode === LEFT_ARROW || key === 'a' || key === 'A') {
+        merchant.velocity.x -= pushForce;
+      } else if (keyCode === RIGHT_ARROW || key === 'd' || key === 'D') {
+        merchant.velocity.x += pushForce;
+      }
+      
+      // The merchant's update() method will apply these velocity changes
+      // and handle dampening, so we don't need to modify position directly
+    }
+  }
+  
+  // Pass the keyPressed event to the scene if it has the method
+  if (mgr && mgr.scene) {
+    const actualScene = mgr.scene.oScene;
+    if (typeof actualScene.keyPressed === 'function') {
+      return actualScene.keyPressed();
+    }
+  }
+}
+
+/**
  * 
  * @param {*} event 
  * @returns 
@@ -369,6 +661,8 @@ function touchStarted(event) {
   if (touches.length > 0) {
     touchStartY = touches[0].y;
     lastTouchY = touches[0].y;
+    touchStartX = touches[0].x;
+    lastTouchX = touches[0].x;
     
     if (mgr && mgr.scene) {
       const actualScene = mgr.scene.oScene;
@@ -395,6 +689,40 @@ function touchMoved(event) {
 
   event.preventDefault();
   
+  // Process merchant movement if we have touches
+  if (mgr && mgr.scene && mgr.scene.oScene && touches.length > 0 && 
+      touchStartX !== null && touchStartY !== null) {
+    
+    const actualScene = mgr.scene.oScene;
+    const merchant = actualScene.merchant || actualScene.floatingMerchant;
+    
+    if (merchant) {
+      // Calculate touch movement delta
+      const currentTouchY = touches[0].y;
+      const currentTouchX = touches[0].x;
+      const touchDeltaY = lastTouchY - currentTouchY;
+      const touchDeltaX = lastTouchX - currentTouchX;
+      
+      const pushForce = 3; // Force for touch movement
+      
+      // Only apply force if the touch movement is significant
+      if (Math.abs(touchDeltaY) > 5) {
+        // Apply vertical force (up/down)
+        merchant.velocity.y += (touchDeltaY / 10) * pushForce;
+      }
+      
+      if (Math.abs(touchDeltaX) > 5) {
+        // Apply horizontal force (left/right)
+        merchant.velocity.x -= (touchDeltaX / 10) * pushForce;
+      }
+      
+      // Update last touch positions
+      lastTouchY = currentTouchY;
+      lastTouchX = currentTouchX;
+    }
+  }
+  
+  // Continue with existing touch behavior for scrolling
   if (!touchStartY) return false;
   
   if (mgr && mgr.scene && touches.length > 0) {
@@ -418,6 +746,194 @@ function touchMoved(event) {
 }
 
 /**
+ * Handle device motion for merchant movement on mobile devices
+ */
+function deviceMoved() {
+  // Only respond to device movement if not explicitly disabled
+  if (window._disableDeviceMotion) return;
+  
+  // Check if we're in a scene that has a floating merchant
+  if (mgr && mgr.scene && mgr.scene.oScene) {
+    const actualScene = mgr.scene.oScene;
+    
+    // Look for the merchant in common places in the scene
+    const merchant = actualScene.merchant || actualScene.floatingMerchant;
+    
+    // If the scene has a merchant property
+    if (merchant) {
+      const moveThreshold = 3; // Minimum acceleration to respond to
+      const pushForce = 2; // Force for device motion
+      
+      // Apply force based on device acceleration
+      if (abs(accelerationX) > moveThreshold || abs(accelerationY) > moveThreshold) {
+        // Map the rotation to velocity changes
+        // Negative accelerationY moves merchant up, positive moves down
+        merchant.velocity.y += constrain(accelerationY / 5, -pushForce, pushForce);
+        
+        // Negative accelerationX moves merchant left, positive moves right
+        merchant.velocity.x += constrain(accelerationX / 5, -pushForce, pushForce);
+      }
+    }
+  }
+  
+  // Pass the deviceMoved event to the scene if it has the method
+  if (mgr && mgr.scene) {
+    const actualScene = mgr.scene.oScene;
+    if (typeof actualScene.deviceMoved === 'function') {
+      return actualScene.deviceMoved();
+    }
+  }
+}
+
+/**
+ * Draw the ocean waves - unified wave drawing function that can be used by any scene
+ * @param {Object} options - Configuration options for the waves
+ * @param {Object} options.yRange - The min and max y values for the waves
+ * @param {number} options.layerCount - Number of wave layers to draw (default: 2)
+ * @param {string} options.colorScheme - Color scheme name from WAVE_COLORS (default: 'WELCOME')
+ * @param {p5.Color} options.customColor - Optional custom color to override the color scheme
+ * @param {number} options.timeScale - Scale factor for animation speed (default: 0.0001)
+ * @param {boolean} options.updateYoff - Whether to update the global yoff value (default: true)
+ */
+function drawWaves(options) {
+  // Default options
+  const defaults = {
+    yRange: { min: height * 0.6, max: height * 0.8 },
+    layerCount: 2,
+    colorScheme: 'UNIFIED',  // Use the unified color scheme for all scenes
+    timeScale: 0.0001,
+    updateYoff: true
+  };
+  
+  // Merge defaults with provided options
+  const config = { ...defaults, ...options };
+  
+  // Get color settings from the specified scheme
+  const colorSettings = WAVE_COLORS[config.colorScheme] || WAVE_COLORS.WELCOME;
+  
+  const t = frameCount * config.timeScale; // Time variable for texture animation
+  
+  // Draw wave layers with different properties
+  for (let waveIndex = 0; waveIndex < config.layerCount; waveIndex++) {
+    push();
+    
+    // Configure wave layer properties - interpolate alpha based on wave index
+    const alphaRange = colorSettings.ALPHA;
+    const alpha = map(
+      waveIndex, 
+      0, 
+      config.layerCount - 1, 
+      alphaRange[0], 
+      alphaRange[1]
+    );
+    
+    // Use custom color if provided, otherwise use color scheme
+    let baseColor;
+    if (config.customColor) {
+      baseColor = config.customColor;
+    } else {
+      const [r, g, b] = colorSettings.BASE;
+      baseColor = color(r, g, b);
+    }
+    
+    // Apply alpha to create the wave color
+    const waveColor = color(
+      red(baseColor), 
+      green(baseColor), 
+      blue(baseColor), 
+      alpha
+    );
+    
+    // Calculate wave boundaries
+    const yMin = config.yRange.min;
+    const yMax = config.yRange.max;
+    
+    // Create the main wave shape
+    beginShape();
+    noStroke();
+    fill(waveColor);
+    
+    // Generate wave points using Perlin noise
+    const wavePoints = [];
+    let xoff = 0;
+    
+    // Create wave vertices
+    vertex(-20, height);
+    for (let x = -20; x <= width + 20; x += VISUAL_SETTINGS.WAVE.STEP) {
+      const y = map(
+        noise(xoff, globalYoff + waveIndex * 0.5),
+        0, 1,
+        yMin, yMax
+      );
+      vertex(x, y);
+      wavePoints.push({ x, y });
+      xoff += VISUAL_SETTINGS.WAVE.NOISE_SCALE;
+    }
+    vertex(width + 20, height);
+    endShape(CLOSE);
+    
+    // Add pixelated texture within the wave shape
+    addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex);
+    
+    pop();
+  }
+  
+  // Update noise offset for continuous wave movement
+  if (config.updateYoff) {
+    globalYoff += VISUAL_SETTINGS.WAVE.Y_INCREMENT;
+  }
+  
+  return globalYoff; // Return the current yoff value for scenes that need it
+}
+
+/**
+ * Adds pixelated texture effect to the wave - shared utility function
+ * @param {Array} wavePoints - Array of wave vertex positions
+ * @param {p5.Color} waveColor - Base color of the wave
+ * @param {number} alpha - Opacity value
+ * @param {number} t - Time variable for animation
+ * @param {number} waveIndex - Current wave layer index
+ */
+function addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
+  const pixelSize = 20;
+  
+  for (let x = 0; x < width; x += pixelSize) {
+    // Find wave height at current x position
+    const waveX = x + 20;
+    const index = constrain(
+      floor(waveX / VISUAL_SETTINGS.WAVE.STEP),
+      0,
+      wavePoints.length - 2
+    );
+    
+    // Interpolate wave height
+    const waveHeight = lerp(
+      wavePoints[index].y,
+      wavePoints[index + 1].y,
+      (waveX % VISUAL_SETTINGS.WAVE.STEP) / VISUAL_SETTINGS.WAVE.STEP
+    );
+    
+    // Draw textured pixels from wave height to bottom
+    for (let y = floor(waveHeight); y < height; y += pixelSize) {
+      const noiseVal = noise(0.06 * x * t, 0.03 * y + waveIndex * 0.5);
+      const brightness = map(noiseVal, 0, 2, 0.7, 1);
+      
+      // Apply noise-based brightness to wave color
+      const pixelColor = color(
+        red(waveColor) * brightness,
+        green(waveColor) * brightness,
+        blue(waveColor) * brightness,
+        alpha
+      );
+      
+      fill(pixelColor);
+      noStroke();
+      rect(x, y, pixelSize, pixelSize);
+    }
+  }
+}
+
+/**
  * 
  * @returns 
  */
@@ -426,6 +942,8 @@ function touchEnded() {
   if (touchStartY !== null) {
     touchStartY = null;
     lastTouchY = null;
+    touchStartX = null;
+    lastTouchX = null;
   }
   return false;
 }
