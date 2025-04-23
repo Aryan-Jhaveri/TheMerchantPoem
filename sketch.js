@@ -11,6 +11,15 @@ let lastTouchY = null;
 let touchStartX = null;
 let lastTouchX = null;
 
+// Device orientation variables
+let rotationX = 0;
+let rotationY = 0;
+let rotationZ = 0;
+let accelerationX = 0;
+let accelerationY = 0;
+let accelerationZ = 0;
+let tiltEnabled = true;
+
 // Menu buttons
 let homeButton;
 let poemButton;
@@ -23,17 +32,24 @@ let globalYoff = VISUAL_SETTINGS.WAVE.Y_OFFSET_START;
 // Shared wave colors - unified color scheme
 const WAVE_COLORS = {
   UNIFIED: {
-    BASE: [26, 33, 71],    // Medium blue for all waves 
-    ALPHA: [250, 600]       // Alpha range for wave layers
+    // The BASE color is the RGB values for the wave's main color
+    // Format: [Red (0-255), Green (0-255), Blue (0-255)]
+    // Increasing values makes the color lighter, decreasing makes it darker
+    BASE: [16, 20, 68],    // Medium blue for all waves 
+    
+    // ALPHA controls the transparency/opacity of wave layers
+    // Format: [Min Alpha, Max Alpha]
+    // Values range from 0 (completely transparent) to 255 (fully opaque)
+    // Values above 255 are treated as 255 internally by p5.js
+    ALPHA: [100, 215]
   }
 };
 
-// Tailwind blue palette for wave textures
+// New Tailwind blue palette for wave textures - deeper blues only
 const WAVE_TINTS = [
-  [5, 22, 58],      // Oxford Blue (#05163A) - Darkest blue
-  [39, 47, 94],     // Delft Blue (#272F5E) - Dark blue
-  [34, 42, 88],     // Space Cadet (#222A58) - Deep blue
-  [144, 141, 198]   // Tropical Indigo (#908DC6) - Purple blue (for seafoam/shimmer)
+  [1, 17, 50],      // Oxford Blue (#011132) - Deepest blue
+  [5, 19, 56],      // Oxford Blue 2 (#051338) - Very deep blue
+  [19, 27, 71]      // Space Cadet 2 (#131B47) - Deep blue
 ];
 
 /**
@@ -220,7 +236,7 @@ class FloatingImage {
   initializeProperties() {
       // Position constraints
       this.xMin = 200;
-      this.xMax = 500;
+      this.xMax = 330;
       this.yMin = 450;
       this.yMax = 600;
 
@@ -231,10 +247,10 @@ class FloatingImage {
       this.height = 200;
 
       // Physics properties
-      this.velocity = createVector(0, 0);
-      this.dampening = 0.96;
-      this.waveInfluenceStrength = 1;
-      this.prevWaveHeight = 1;
+      this.velocity = createVector(0, 4);
+      this.dampening = 0.9;
+      this.waveInfluenceStrength = 0.5;
+      this.prevWaveHeight = 5;
   }
 
   getWaveHeightAtPosition(xoff, yoff) {
@@ -289,7 +305,9 @@ function preload() {
       // Add user interaction check
       if (getAudioContext().state !== 'running') {
         getAudioContext().resume().then(() => {
-          backgroundMusic.setVolume(volumeSlider.value()); 
+          if (volumeSlider) {
+            backgroundMusic.setVolume(volumeSlider.value());
+          }
           backgroundMusic.loop();
           isPlaying = true;
           if (playButton) {
@@ -297,7 +315,9 @@ function preload() {
           }
         });
       } else {
-        backgroundMusic.setVolume(volumeSlider.value());
+        if (volumeSlider) {
+          backgroundMusic.setVolume(volumeSlider.value());
+        }
         backgroundMusic.loop();
         isPlaying = true;
         if (playButton) {
@@ -373,13 +393,51 @@ function createMenuButtons() {
  */
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  // Disable device orientation and motion handling
-  window._disableDeviceMotion = true;
-  window._disableDeviceOrientation = true;
+  // Enable device orientation and motion handling for tilt controls
+  window._disableDeviceMotion = false;
+  window._disableDeviceOrientation = false;
+  tiltEnabled = true;
   
   // Create UI controls
   createMusicControls();
   createMenuButtons();
+  
+  // Init device orientation event listener for iOS
+  if (typeof window.DeviceOrientationEvent !== 'undefined' && 
+      typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+    console.log("iOS device orientation detected - will request permission when user interacts");
+    
+    // Create permission request button for iOS (only shown if needed)
+    const permissionButton = createButton('Enable Tilt Controls');
+    permissionButton.position(windowWidth/2 - 100, windowHeight/2 - 25);
+    permissionButton.size(200, 50);
+    permissionButton.style('background-color', 'rgba(0,0,0,0.5)');
+    permissionButton.style('color', 'white');
+    permissionButton.style('border', 'none');
+    permissionButton.style('border-radius', '5px');
+    permissionButton.style('font-size', '16px');
+    permissionButton.style('display', 'none');
+    permissionButton.mousePressed(() => {
+      // Request permission for device motion/orientation
+      DeviceOrientationEvent.requestPermission()
+        .then(response => {
+          if (response === 'granted') {
+            tiltEnabled = true;
+            permissionButton.style('display', 'none');
+            console.log("Device orientation permission granted");
+          } else {
+            console.log("Device orientation permission denied");
+          }
+        })
+        .catch(console.error);
+    });
+    
+    // Show the button on first interaction
+    window.addEventListener('touchstart', function showPermissionButtonOnce() {
+      permissionButton.style('display', 'block');
+      window.removeEventListener('touchstart', showPermissionButtonOnce);
+    }, { once: true });
+  }
   
   mgr = new SceneManager();
   window.mgr = mgr;
@@ -406,7 +464,7 @@ function setup() {
 }
 
 /**
- * Create music controls with play/pause button and volume slider
+ * Create music controls with play/pause button and canvas volume slider
  */
 
 function createMusicControls() {
@@ -443,10 +501,17 @@ function createMusicControls() {
   playButton.touchStarted(togglePlay);
   playButton.parent(controlsDiv);
 
-  // Create volume slider
-  // Create volume slider with range 0-1, starting value 0.5, and step size 0.01
+  // Create volume slider with DOM
   volumeSlider = createSlider(0, 1, 0.5, 0.01);
   volumeSlider.style('width', '100px');
+  volumeSlider.style('height', '10px');
+  volumeSlider.style('margin-left', '10px');
+  volumeSlider.style('appearance', 'none');
+  volumeSlider.style('-webkit-appearance', 'none');
+  volumeSlider.style('background', 'rgba(26, 33, 71, 0.5)');
+  volumeSlider.style('outline', 'none');
+  volumeSlider.style('opacity', '0.8');
+  volumeSlider.style('border-radius', '5px');
   volumeSlider.input(updateVolume);
   volumeSlider.touchStarted(handleSliderTouch);
   volumeSlider.touchMoved(handleSliderTouch);
@@ -502,14 +567,20 @@ async function togglePlay() {
  * Update the volume based on the slider value
  */
 function updateVolume() {
+  // Get value from the DOM slider
   const volume = volumeSlider.value();
-  backgroundMusic.setVolume(volume);
+  
+  // Set the volume if the music is loaded
+  if (backgroundMusic) {
+    backgroundMusic.setVolume(volume);
+  }
 }
 
 /**
  * Draw the sketch
  */
 function draw() {
+  // Draw the current scene
   mgr.draw();
 }
 
@@ -641,9 +712,9 @@ function windowResized() {
 }
 
 /**
- * 
- * @param {*} event 
- * @returns 
+ * Handle touch events for the volume slider
+ * @param {TouchEvent} event - The touch event
+ * @returns {boolean} - False to prevent default behavior
  */
 function handleSliderTouch(event) {
   event.preventDefault();
@@ -683,9 +754,9 @@ function touchStarted(event) {
 }
 
 /**
- * 
- * @param {*} event 
- * @returns 
+ * Handle touch movement events for both merchant movement and scene scrolling
+ * @param {*} event Touch event object
+ * @returns {boolean} Whether to prevent default behavior
  */
 function touchMoved(event) {
   // Check if touch is on music controls
@@ -703,14 +774,16 @@ function touchMoved(event) {
     
     const actualScene = mgr.scene.oScene;
     const merchant = actualScene.merchant || actualScene.floatingMerchant;
+    const isJourneyScene = actualScene.constructor.name === 'JourneyScene';
     
-    if (merchant) {
-      // Calculate touch movement delta
-      const currentTouchY = touches[0].y;
-      const currentTouchX = touches[0].x;
-      const touchDeltaY = lastTouchY - currentTouchY;
-      const touchDeltaX = lastTouchX - currentTouchX;
-      
+    // Get current touch positions
+    const currentTouchY = touches[0].y;
+    const currentTouchX = touches[0].x;
+    const touchDeltaY = lastTouchY - currentTouchY;
+    const touchDeltaX = lastTouchX - currentTouchX;
+    
+    // Merchant movement - if merchant exists and touch movement is significant
+    if (merchant && !isJourneyScene) {
       const pushForce = 3; // Force for touch movement
       
       // Only apply force if the touch movement is significant
@@ -723,42 +796,54 @@ function touchMoved(event) {
         // Apply horizontal force (left/right)
         merchant.velocity.x -= (touchDeltaX / 10) * pushForce;
       }
+    }
+    
+    // Scene scrolling functionality - applies to all scenes with mouseWheel
+    // Use a larger threshold for JourneyScene to make scrolling more intentional
+    const touchThreshold = isJourneyScene ? 20 : 5;
+    
+    if (Math.abs(touchDeltaY) > touchThreshold) {
+      console.log("Touch scroll delta:", touchDeltaY, "in scene:", actualScene.constructor.name);
       
-      // Update last touch positions
-      lastTouchY = currentTouchY;
-      lastTouchX = currentTouchX;
+      // For JourneyScene, handle touch scrolling with exaggerated delta
+      if (isJourneyScene) {
+        // Make touch scrolling more responsive for JourneyScene
+        const amplifiedDelta = touchDeltaY * 3; // Amplify the effect
+        
+        if (typeof actualScene.mouseWheel === 'function') {
+          const touchEvent = {
+            delta: amplifiedDelta
+          };
+          actualScene.mouseWheel(touchEvent);
+        }
+      } 
+      // For other scenes, use normal mouseWheel handling
+      else if (typeof actualScene.mouseWheel === 'function') {
+        const touchEvent = {
+          delta: touchDeltaY
+        };
+        actualScene.mouseWheel(touchEvent);
+      }
     }
+    
+    // Update last touch positions
+    lastTouchY = currentTouchY;
+    lastTouchX = currentTouchX;
   }
   
-  // Continue with existing touch behavior for scrolling
-  if (!touchStartY) return false;
-  
-  if (mgr && mgr.scene && touches.length > 0) {
-    const actualScene = mgr.scene.oScene;
-    const currentTouchY = touches[0].y;
-    const touchDelta = lastTouchY - currentTouchY;
-    
-    if (Math.abs(touchDelta) <= 5) {
-      return false;
-    }
-    
-    if (typeof actualScene.mouseWheel === 'function') {
-      const touchEvent = {
-        delta: touchDelta
-      };
-      lastTouchY = currentTouchY;
-      return actualScene.mouseWheel(touchEvent);
-    }
-  }
   return false;
 }
 
 /**
- * Handle device motion for merchant movement on mobile devices
+ * Handle device orientation and movement for merchant control
  */
 function deviceMoved() {
-  // Only respond to device movement if not explicitly disabled
-  if (window._disableDeviceMotion) return;
+  // Update acceleration values
+  accelerationX = accelerationX * 0.8 + rotationY * 0.2;
+  accelerationY = accelerationY * 0.8 + rotationX * 0.2;
+  
+  // Only proceed if tilt is enabled
+  if (!tiltEnabled) return;
   
   // Check if we're in a scene that has a floating merchant
   if (mgr && mgr.scene && mgr.scene.oScene) {
@@ -769,27 +854,49 @@ function deviceMoved() {
     
     // If the scene has a merchant property
     if (merchant) {
-      const moveThreshold = 3; // Minimum acceleration to respond to
-      const pushForce = 2; // Force for device motion
+      // Set thresholds for device tilt - lower threshold for higher sensitivity
+      const tiltThreshold = 0.5;  // Reduced from 2 to detect smaller tilts
+      const maxTiltForce = 5;     // Increased from 3 for stronger response
       
-      // Apply force based on device acceleration
-      if (abs(accelerationX) > moveThreshold || abs(accelerationY) > moveThreshold) {
-        // Map the rotation to velocity changes
-        // Negative accelerationY moves merchant up, positive moves down
-        merchant.velocity.y += constrain(accelerationY / 5, -pushForce, pushForce);
+      // Only apply forces if the tilt is significant enough
+      if (abs(rotationY) > tiltThreshold || abs(rotationX) > tiltThreshold) {
+        // Calculate force based on tilt angle with higher sensitivity
+        // rotationY affects horizontal movement (left/right)
+        // Divided by smaller value (10 instead of 20) for higher sensitivity
+        const xForce = constrain(rotationY / 10, -maxTiltForce, maxTiltForce);
         
-        // Negative accelerationX moves merchant left, positive moves right
-        merchant.velocity.x += constrain(accelerationX / 5, -pushForce, pushForce);
+        // rotationX affects vertical movement (up/down)
+        // Divided by smaller value (10 instead of 20) for higher sensitivity
+        const yForce = constrain(rotationX / 10, -maxTiltForce, maxTiltForce);
+        
+        // Apply the forces to the merchant's velocity
+        merchant.velocity.x += xForce;
+        merchant.velocity.y += yForce;
+        
+        // Log forces for debugging
+        console.log(`Tilt forces: X=${xForce.toFixed(2)}, Y=${yForce.toFixed(2)}, rotX=${rotationX.toFixed(2)}, rotY=${rotationY.toFixed(2)}`);
       }
     }
   }
+}
+
+/**
+ * Handle device orientation changes (for iOS that uses deviceorientation instead of devicemotion)
+ */
+function deviceTurned() {
+  // Update rotation values with less smoothing for more responsive control
+  // Original was 0.9/0.1 ratio, updated to 0.7/0.3 for quicker response
+  rotationX = rotationX * 0.7 + constrain(rotationX, -90, 90) * 0.3;
+  rotationY = rotationY * 0.7 + constrain(rotationY, -90, 90) * 0.3;
+  rotationZ = rotationZ * 0.7 + constrain(rotationZ, -90, 90) * 0.3;
   
-  // Pass the deviceMoved event to the scene if it has the method
-  if (mgr && mgr.scene) {
-    const actualScene = mgr.scene.oScene;
-    if (typeof actualScene.deviceMoved === 'function') {
-      return actualScene.deviceMoved();
-    }
+  // Prevent extremely small rotations from causing noise
+  if (abs(rotationX) < 0.3) rotationX = 0;
+  if (abs(rotationY) < 0.3) rotationY = 0;
+  
+  // Debug output to help with calibration
+  if (frameCount % 60 === 0) { // Log once per second
+    console.log(`Device orientation: X=${rotationX.toFixed(1)}, Y=${rotationY.toFixed(1)}, Z=${rotationZ.toFixed(1)}`);
   }
 }
 
@@ -903,11 +1010,11 @@ function drawWaves(options) {
  * @param {number} waveIndex - Current wave layer index
  */
 function addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
-  const pixelSize = 20;
+  const pixelSize = 60;
   
   for (let x = 0; x < width; x += pixelSize) {
     // Find wave height at current x position
-    const waveX = x + 20;
+    const waveX = x + 10;
     const index = constrain(
       floor(waveX / VISUAL_SETTINGS.WAVE.STEP),
       0,
@@ -923,50 +1030,59 @@ function addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
     
     // Draw textured pixels from wave height to bottom
     for (let y = floor(waveHeight); y < height; y += pixelSize) {
-      // Use noise to create a wavy pattern with different frequencies
-      const noiseVal = noise(0.09 * x * t, 0.03 * y + waveIndex * 0.5);
+      // Use noise to create a wavy pattern but consistent within each cube
+      // Generate noise value once per cube for more coherent color blocks
+      const noiseVal = noise(0.03 * floor(x/pixelSize), 0.03 * floor(y/pixelSize) + waveIndex * 0.2 + t * 0.05);
       
       // Calculate distance from wave surface - for applying color gradient
       const distanceFromSurface = y - waveHeight;
-      const halfWaveHeight = (height - waveHeight) / 2;
+      
+      // Make the light part MUCH thinner - only top 8% of the water
+      const thinTopLayer = (height - waveHeight) * 0.05; // Top 8% of water
+      const remainingWater = (height - waveHeight) - thinTopLayer;
       
       // Determine color selection strategy based on depth and wave pattern
       let tintIndex;
       
-      // Top half of wave - more likely to have lighter colors
-      if (distanceFromSurface < halfWaveHeight) {
-        // Near the surface - calculate a gradient that favors lighter colors at the top
-        const surfaceRatio = 1 - (distanceFromSurface / halfWaveHeight); // 1 at surface, 0 at half-depth
+      // Thin light layer at the top
+      if (distanceFromSurface < thinTopLayer) {
+        // Very near the surface - create a thin light layer
+        const surfaceRatio = 1 - (distanceFromSurface / thinTopLayer); // 1 at surface, 0 at layer boundary
         
-        // Decide whether to use shimmer/seafoam effect (lightest color)
-        if (surfaceRatio > 0.7 && noiseVal > 0.75 && random() > 0.5) {
-          // Strong probability of light colors near the very top (seafoam/shimmer)
-          tintIndex = WAVE_TINTS.length - 1; // Tropical Indigo (lightest)
+        // Create light effect only at the very top and based on noise consistency
+        if (surfaceRatio > 0.5 && noiseVal > 0.65) {
+          // Light colors only at the very top of waves
+          tintIndex = WAVE_TINTS.length - 1; // Lightest color
         } 
-        else if (surfaceRatio > 0.4 && noiseVal > 0.8 && random() > 0.7) {
-          // Medium probability of light colors in middle of top half
-          tintIndex = WAVE_TINTS.length - 1; // Tropical Indigo (lightest)
+        else if (noiseVal > 0.9) {
+          // Occasional light spots in the top layer
+          tintIndex = WAVE_TINTS.length - 1; // Lightest color
         }
         else {
-          // Gradient from medium to light colors throughout top half
-          // Use the noise and surface ratio to create a natural-looking gradient
-          const topGradient = surfaceRatio * 0.7 + noiseVal * 0.3;
-          tintIndex = floor(map(topGradient, 0, 1, 1, WAVE_TINTS.length - 1));
+          // Use the second-to-lightest color for most of the thin top layer
+          tintIndex = WAVE_TINTS.length - 2; 
         }
       } 
-      // Bottom half of wave - weighted heavily toward the darkest colors
+      // Everything below the thin top layer - predominantly dark
       else {
-        // Deeper water gets progressively darker
-        const depthRatio = constrain(map(distanceFromSurface, halfWaveHeight, height - waveHeight, 0, 1), 0, 1);
+        // Calculate how deep we are in the remaining water
+        const depthRatio = constrain(map(
+          distanceFromSurface - thinTopLayer, 
+          0, 
+          remainingWater, 
+          0, 
+          1
+        ), 0, 1);
         
-        // Make almost everything dark in the bottom half, with very rare lighter spots
-        if (noiseVal > 0.95 && random() > 0.95) {
-          // Very rare light shimmer in deep water
-          tintIndex = WAVE_TINTS.length - 2; // Second lightest
+        // Very rare light spots in the deeper water
+        if (noiseVal > 0.9 && random() > 0.98) {
+          // Extremely rare light spots deep in the water
+          tintIndex = WAVE_TINTS.length - 2; 
         } else {
-          // Mostly dark, gets darker with depth
-          const darknessBias = depthRatio * 0.8 + pow(noiseVal, 2) * 0.2;
-          tintIndex = floor(map(darknessBias, 0, 1, 0, 1.5)); // Mostly indices 0-1 (darkest colors)
+          // Use mostly the two darkest colors with coherent patterns
+          // Higher noise values get slightly lighter colors
+          const darkBias = depthRatio * 0.7 + (1 - noiseVal) * 0.3;
+          tintIndex = floor(map(darkBias, 0, 1, 0, 1.8)); // Mostly darkest colors
         }
       }
       
@@ -995,10 +1111,17 @@ function addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
 }
 
 /**
- * 
- * @returns 
+ * Handle touch end event - cleanup touch tracking variables
+ * @param {*} event Touch end event
+ * @returns {boolean} Whether to prevent default behavior
  */
-function touchEnded() {
+function touchEnded(event) {
+  // Log for debugging
+  if (mgr && mgr.scene && mgr.scene.oScene) {
+    const actualScene = mgr.scene.oScene;
+    console.log("Touch ended in scene:", actualScene.constructor.name);
+  }
+  
   // Only clear if we actually had a touch start
   if (touchStartY !== null) {
     touchStartY = null;
@@ -1006,5 +1129,8 @@ function touchEnded() {
     touchStartX = null;
     lastTouchX = null;
   }
+  
+  // Prevent default to avoid accidental clicks after touch
+  event.preventDefault();
   return false;
 }

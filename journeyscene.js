@@ -358,40 +358,59 @@ class JourneyScene {
   }
 
 /**
- * Mouse wheel function for the scene
- * This function handles mouse wheel interactions
- * @param {*} event 
- * @returns 
+ * Mouse wheel and touch scroll function for the scene
+ * This function handles both mouse wheel and touch scroll interactions
+ * @param {*} event - Mouse wheel event or touch event with delta property
+ * @returns {boolean} Whether default behavior should be prevented
  */
   mouseWheel(event) {
+    // Skip if already in a snap animation
     if (this.isSnapping) {
+        console.log("Ignoring scroll - snapping in progress");
         return false;
     }
     
-    if (Math.abs(event.delta) < 10) {
+    // Determine if this is from touch or mouse wheel
+    const isTouchEvent = 'touches' in window && touches.length > 0;
+    
+    // Apply different thresholds for mouse wheel vs. touch
+    const minDelta = isTouchEvent ? 15 : 10;
+    
+    if (Math.abs(event.delta) < minDelta) {
+        console.log("Ignoring small delta:", event.delta);
         return false;
     }
     
+    // Touch events are typically opposite direction, so we adjust if needed
     const direction = event.delta > 0 ? 1 : -1;
     let currentSection = Math.round(this.scrollY / windowHeight);
+    
+    console.log("Processing scroll - current section:", currentSection, 
+                "direction:", direction, "delta:", event.delta);
     
     // Check if we're at the last section and scrolling down
     if (currentSection >= this.sections.length - 1 && direction > 0) {
         this.targetScrollY = this.sections.length * windowHeight;
         this.isSnapping = true;
+        console.log("Transitioning to LastScene");
         setTimeout(() => {
             window.mgr.showScene(LastScene);
         }, 500);
         return false;
     }
     
+    // Calculate target section with constraints
     let targetSection = currentSection + direction;
     targetSection = constrain(targetSection, 0, this.sections.length - 1);
     this.targetScrollY = targetSection * windowHeight;
     
+    console.log("Moving to section:", targetSection);
+    
+    // Set snapping and clear it after animation completes
     this.isSnapping = true;
     setTimeout(() => {
         this.isSnapping = false;
+        console.log("Snap completed");
     }, 950);
     
     return false;

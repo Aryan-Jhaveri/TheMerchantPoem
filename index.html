@@ -8,7 +8,7 @@
     <!-- P5.js Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/addons/p5.sound.min.js"></script>
-    
+
     <!-- Scene Manager -->
     <script src="libraries/scenemanager.js"></script>
 
@@ -39,10 +39,16 @@
         /* Styling for the volume slider */
         input[type="range"] {
             -webkit-appearance: none;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(26, 33, 71, 0.5);  /* Dark blue matching the site theme */
             border-radius: 5px;
             height: 5px;
             outline: none;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        
+        input[type="range"]:hover {
+            opacity: 1;
         }
         
         input[type="range"]::-webkit-slider-thumb {
@@ -52,6 +58,7 @@
             background: white;
             border-radius: 50%;
             cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
         }
         
         input[type="range"]::-moz-range-thumb {
@@ -61,6 +68,14 @@
             border-radius: 50%;
             cursor: pointer;
             border: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Track styling for Firefox */
+        input[type="range"]::-moz-range-track {
+            background: rgba(26, 33, 71, 0.5);
+            border-radius: 5px;
+            height: 5px;
         }
     </style>
   </head>

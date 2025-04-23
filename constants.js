@@ -14,9 +14,9 @@ const VISUAL_SETTINGS = {
   // Wave animation properties
   WAVE: {
     Y_OFFSET_START: 0.09,
-    STEP: 5,
-    NOISE_SCALE: 0.000,
-    Y_INCREMENT: 0.004
+    STEP: 2,
+    NOISE_SCALE: 0.000005,
+    Y_INCREMENT: 0.009
   },
   
   // Canvas layout defaults
