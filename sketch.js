@@ -35,21 +35,22 @@ const WAVE_COLORS = {
     // The BASE color is the RGB values for the wave's main color
     // Format: [Red (0-255), Green (0-255), Blue (0-255)]
     // Increasing values makes the color lighter, decreasing makes it darker
-    BASE: [16, 20, 68],    // Medium blue for all waves 
+    BASE: [80, 153, 199],    // Medium blue for all waves 
     
     // ALPHA controls the transparency/opacity of wave layers
     // Format: [Min Alpha, Max Alpha]
     // Values range from 0 (completely transparent) to 255 (fully opaque)
     // Values above 255 are treated as 255 internally by p5.js
-    ALPHA: [100, 215]
+    ALPHA: [40, 215]
   }
 };
 
 // New Tailwind blue palette for wave textures - deeper blues only
 const WAVE_TINTS = [
-  [1, 17, 50],      // Oxford Blue (#011132) - Deepest blue
-  [5, 19, 56],      // Oxford Blue 2 (#051338) - Very deep blue
-  [19, 27, 71]      // Space Cadet 2 (#131B47) - Deep blue
+  [17,26,45],
+  [17,26,45], 
+  [17,26,45],
+  [13,18,29]      
 ];
 
 /**
