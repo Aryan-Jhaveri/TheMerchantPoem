@@ -790,7 +790,7 @@ function touchMoved(event) {
       // Only apply force if the touch movement is significant
       if (Math.abs(touchDeltaY) > 5) {
         // Apply vertical force (up/down)
-        merchant.velocity.y += (touchDeltaY / 10) * pushForce;
+        merchant.velocity.y -= (touchDeltaY / 10) * pushForce;
       }
       
       if (Math.abs(touchDeltaX) > 5) {
