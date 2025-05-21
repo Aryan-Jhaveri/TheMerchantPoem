@@ -45,7 +45,7 @@ const WAVE_COLORS = {
   }
 };
 
-// New Tailwind blue palette for wave textures - deeper blues only
+// New Tailwind blue palette for wave textures - deeper blues only.
 const WAVE_TINTS = [
   [17,26,45],
   [17,26,45], 
