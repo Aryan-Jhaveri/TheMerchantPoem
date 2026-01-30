@@ -18,7 +18,7 @@ This interactive web experience combines poetry, music, and pixel art in a uniqu
 * Educational resource integration
 
 <h3> Resources </h3>
-The project includes links to valuable educational resources: <br><br>
+The project includes links to valuable resources i use:  <br><br>
 
 
 <b> [St. Catharines Public Library Card Registration](https://www.myscpl.ca/) </b>
