@@ -10,7 +10,7 @@ const VISUAL_SETTINGS = {
     MIN: 50,
     MAX: 200
   },
-  
+
   // Wave animation properties
   WAVE: {
     Y_OFFSET_START: 0.09,
@@ -18,7 +18,7 @@ const VISUAL_SETTINGS = {
     NOISE_SCALE: 0.000005,
     Y_INCREMENT: 0.009
   },
-  
+
   // Canvas layout defaults
   CANVAS: {
     BUTTON_WIDTH_PERCENT: 0.3,
@@ -38,7 +38,7 @@ const BREAKPOINTS = {
 // Typography settings
 const TYPOGRAPHY = {
   TITLE: {
-    FONT: 'Jacquard12',
+    FONT: 'MedievalSharp',
     SIZE: {
       MOBILE: 55,    // Smaller size for mobile
       TABLET: 55,    // Medium size for tablet
@@ -48,18 +48,18 @@ const TYPOGRAPHY = {
     COLOR: '#FFFFFF'
   },
   BUTTON: {
-    FONT: 'Jacquard12',
+    FONT: 'MedievalSharp',
     SIZE: 24,
     LEADING: 1.1,
     COLOR: '#FFFFFF'
   },
   POETRY: {
-    FONT: 'Jacquard12',
+    FONT: 'MedievalSharp',
     SIZE: 32,
     LEADING: 1.4,
     COLOR: '#FFFFFF'
   }
-}; 
+};
 
 // Centralized menu configuration
 const MENU_CONFIG = {
@@ -98,7 +98,7 @@ const MENU_CONFIG = {
 
 // Base button style that won't change with screen size
 const BUTTON_STYLE = {
-  'font-family': 'Jacquard12-Regular',
+  'font-family': 'MedievalSharp',
   'background': 'rgba(0, 0, 0, 0.5)',
   'color': 'white',
   'border': 'none',

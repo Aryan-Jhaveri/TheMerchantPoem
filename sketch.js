@@ -36,7 +36,7 @@ const WAVE_COLORS = {
     // Format: [Red (0-255), Green (0-255), Blue (0-255)]
     // Increasing values makes the color lighter, decreasing makes it darker
     BASE: [80, 153, 199],    // Medium blue for all waves 
-    
+
     // ALPHA controls the transparency/opacity of wave layers
     // Format: [Min Alpha, Max Alpha]
     // Values range from 0 (completely transparent) to 255 (fully opaque)
@@ -47,10 +47,10 @@ const WAVE_COLORS = {
 
 // New Tailwind blue palette for wave textures - deeper blues only.
 const WAVE_TINTS = [
-  [17,26,45],
-  [17,26,45], 
-  [17,26,45],
-  [13,18,29]      
+  [17, 26, 45],
+  [17, 26, 45],
+  [17, 26, 45],
+  [13, 18, 29]
 ];
 
 /**
@@ -71,9 +71,9 @@ class Star {
 
   reset() {
     const windowDiagonal = sqrt(windowWidth * windowWidth + windowHeight * windowHeight);
-    this.baseSize = random(VISUAL_SETTINGS.STAR_SIZE.MIN, VISUAL_SETTINGS.STAR_SIZE.MAX) * 
-                    (windowDiagonal / 1500);
-    
+    this.baseSize = random(VISUAL_SETTINGS.STAR_SIZE.MIN, VISUAL_SETTINGS.STAR_SIZE.MAX) *
+      (windowDiagonal / 1500);
+
     this.opacity = map(
       this.baseSize,
       VISUAL_SETTINGS.STAR_SIZE.MIN * (windowDiagonal / 1500),
@@ -116,96 +116,96 @@ class Star {
 * Cloud class manages individual cloud elements, including their movement and opacity
 */
 class Cloud {
-constructor(img, speed) {
+  constructor(img, speed) {
     this.img = img;
     this.speed = speed * 0.3;
     this.initializeCloud();
-}
+  }
 
-initializeCloud() {
+  initializeCloud() {
     this.xPercent = random(0, 1);
     this.yPercent = random(0, 0.4);
     this.updateDimensions();
-    
+
     // Animation properties
     this.opacity = 0;
     this.targetOpacity = random(300, 400);
     this.fadeSpeed = 0.005;
     this.ySpeed = random(0.001, 0.002);
     this.yAmplitude = random(5, 10);
-    
+
     // Lifecycle management
     this.lifespan = random(300, 600);
     this.age = 0;
-}
+  }
 
-updateDimensions() {
+  updateDimensions() {
     this.x = this.xPercent * windowWidth;
     this.y = this.yPercent * windowHeight;
     this.originalY = this.y;
     this.width = windowWidth * 0.2;
     this.height = this.width * 0.66;
-}
+  }
 
-update() {
+  update() {
     this.age++;
     this.x += this.speed;
     this.y = this.originalY + sin(frameCount * this.ySpeed) * this.yAmplitude;
 
     // Handle cloud lifecycle
     if (this.age < 60) {
-    this.opacity = lerp(this.opacity, this.targetOpacity, 0.02);
+      this.opacity = lerp(this.opacity, this.targetOpacity, 0.02);
     } else if (this.age > this.lifespan - 60) {
-    this.opacity = lerp(this.opacity, 0, 0.02);
+      this.opacity = lerp(this.opacity, 0, 0.02);
     }
 
     if (this.age > this.lifespan || this.x > windowWidth + this.width) {
-    this.reset();
+      this.reset();
     }
-}
+  }
 
-reset() {
+  reset() {
     this.initializeCloud();
-}
+  }
 
-handleResize() {
+  handleResize() {
     this.updateDimensions();
-}
+  }
 
-display() {
+  display() {
     push();
     if (this.img && this.img.width > 0) {
-    tint(255, this.opacity);
-    image(this.img, this.x, this.y, this.width, this.height);
+      tint(255, this.opacity);
+      image(this.img, this.x, this.y, this.width, this.height);
     }
     pop();
-}
+  }
 }
 
 /**
 * Moon class handles the moon's display and gentle floating animation
 */
 class Moon {
-constructor(img) {
+  constructor(img) {
     this.img = img;
     this.calculateDimensions();
     this.floatSpeed = 0.002;
     this.floatAmplitude = 15;
     this.floatOffset = 0;
-}
+  }
 
-calculateDimensions() {
+  calculateDimensions() {
     this.leftBoundary = (windowWidth * 5) / 7;
     this.size = windowWidth * 0.2;
     this.x = this.leftBoundary + (windowWidth - this.leftBoundary) / 2;
     this.y = windowHeight * 0.15;
-}
+  }
 
-update() {
+  update() {
     this.floatOffset = sin(frameCount * this.floatSpeed) * this.floatAmplitude;
-}
+  }
 
-display() {
+  display() {
     if (this.img) {
       push();
       tint(255, 220);
@@ -218,11 +218,11 @@ display() {
       );
       pop();
     }
-}
+  }
 
-handleResize() {
+  handleResize() {
     this.calculateDimensions();
-}
+  }
 }
 
 /**
@@ -230,64 +230,64 @@ handleResize() {
 */
 class FloatingImage {
   constructor(img) {
-      this.img = img;
-      this.initializeProperties();
+    this.img = img;
+    this.initializeProperties();
   }
 
   initializeProperties() {
-      // Position constraints
-      this.xMin = 200;
-      this.xMax = 330;
-      this.yMin = 450;
-      this.yMax = 600;
+    // Position constraints
+    this.xMin = 200;
+    this.xMax = 330;
+    this.yMin = 450;
+    this.yMax = 600;
 
-      // Current position and dimensions
-      this.x = (this.xMin + this.xMax) / 2;
-      this.y = (this.yMin + this.yMax) / 2;
-      this.width = 230;
-      this.height = 200;
+    // Current position and dimensions
+    this.x = (this.xMin + this.xMax) / 2;
+    this.y = (this.yMin + this.yMax) / 2;
+    this.width = 230;
+    this.height = 200;
 
-      // Physics properties
-      this.velocity = createVector(0, 4);
-      this.dampening = 0.9;
-      this.waveInfluenceStrength = 0.5;
-      this.prevWaveHeight = 5;
+    // Physics properties
+    this.velocity = createVector(0, 4);
+    this.dampening = 0.9;
+    this.waveInfluenceStrength = 0.5;
+    this.prevWaveHeight = 5;
   }
 
   getWaveHeightAtPosition(xoff, yoff) {
-      return map(
+    return map(
       noise(this.x * VISUAL_SETTINGS.WAVE.NOISE_SCALE + xoff, yoff),
       0, 1,
       this.yRange.min,
       this.yRange.max
-      );
+    );
   }
 
   update() {
-      let currentWaveHeight = this.getWaveHeightAtPosition(0, this.yoff);
-      let waveVelocity = (currentWaveHeight - this.prevWaveHeight) * this.waveInfluenceStrength;
+    let currentWaveHeight = this.getWaveHeightAtPosition(0, this.yoff);
+    let waveVelocity = (currentWaveHeight - this.prevWaveHeight) * this.waveInfluenceStrength;
 
-      this.velocity.y += waveVelocity;
-      this.x += this.velocity.x;
-      this.y += this.velocity.y;
+    this.velocity.y += waveVelocity;
+    this.x += this.velocity.x;
+    this.y += this.velocity.y;
 
-      this.x = constrain(this.x, this.xMin, this.xMax);
-      this.y = constrain(this.y, this.yMin, this.yMax);
+    this.x = constrain(this.x, this.xMin, this.xMax);
+    this.y = constrain(this.y, this.yMin, this.yMax);
 
-      this.velocity.mult(this.dampening);
-      this.prevWaveHeight = currentWaveHeight;
+    this.velocity.mult(this.dampening);
+    this.prevWaveHeight = currentWaveHeight;
   }
 
   display() {
-      push();
-      image(
+    push();
+    image(
       this.img,
       this.x - this.width / 2,
       this.y - this.height / 2,
       this.width,
       this.height
-      );
-      pop();
+    );
+    pop();
   }
 }
 
@@ -296,11 +296,11 @@ class FloatingImage {
  */
 function preload() {
   // Load the font
-  menuFont = loadFont('assets/Jacquard12-Regular.ttf');
-  
+  menuFont = loadFont('assets/MedievalSharp-Regular.ttf');
+
   // Load the music file
   soundFormats('mp3');
-  backgroundMusic = loadSound('public/Life of Pi.mp3', 
+  backgroundMusic = loadSound('public/Life of Pi.mp3',
     () => {
       console.log("Music loaded successfully");
       // Add user interaction check
@@ -337,7 +337,7 @@ function preload() {
   window.welcomeScene.preload();
 
   window.journeyScene.preload();
-  
+
 }
 
 // Helper function to determine current device type
@@ -398,19 +398,19 @@ function setup() {
   window._disableDeviceMotion = false;
   window._disableDeviceOrientation = false;
   tiltEnabled = true;
-  
+
   // Create UI controls
   createMusicControls();
   createMenuButtons();
-  
+
   // Init device orientation event listener for iOS
-  if (typeof window.DeviceOrientationEvent !== 'undefined' && 
-      typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+  if (typeof window.DeviceOrientationEvent !== 'undefined' &&
+    typeof window.DeviceOrientationEvent.requestPermission === 'function') {
     console.log("iOS device orientation detected - will request permission when user interacts");
-    
+
     // Create permission request button for iOS (only shown if needed)
     const permissionButton = createButton('Enable Tilt Controls');
-    permissionButton.position(windowWidth/2 - 100, windowHeight/2 - 25);
+    permissionButton.position(windowWidth / 2 - 100, windowHeight / 2 - 25);
     permissionButton.size(200, 50);
     permissionButton.style('background-color', 'rgba(0,0,0,0.5)');
     permissionButton.style('color', 'white');
@@ -432,14 +432,14 @@ function setup() {
         })
         .catch(console.error);
     });
-    
+
     // Show the button on first interaction
     window.addEventListener('touchstart', function showPermissionButtonOnce() {
       permissionButton.style('display', 'block');
       window.removeEventListener('touchstart', showPermissionButtonOnce);
     }, { once: true });
   }
-  
+
   mgr = new SceneManager();
   window.mgr = mgr;
 
@@ -449,18 +449,18 @@ function setup() {
   mgr.addScene(LastScene);
 
   // Wire up the scene manager
-  mgr.wire = function() {
-      if (this.scene) {
-          console.log('Wiring scene:', this.scene.constructor.name);
-          // Bind all p5 methods to the scene
-          Reflect.ownKeys(this.scene).forEach(method => {
-              if (typeof this.scene[method] === 'function') {
-                  this.scene[method] = this.scene[method].bind(this.scene);
-              }
-          });
-      }
+  mgr.wire = function () {
+    if (this.scene) {
+      console.log('Wiring scene:', this.scene.constructor.name);
+      // Bind all p5 methods to the scene
+      Reflect.ownKeys(this.scene).forEach(method => {
+        if (typeof this.scene[method] === 'function') {
+          this.scene[method] = this.scene[method].bind(this.scene);
+        }
+      });
+    }
   };
-  
+
   mgr.showScene(WelcomeScene);
 }
 
@@ -486,7 +486,7 @@ function createMusicControls() {
   // Create title text
   const titleSpan = createSpan('Life of Pi.mp3 - A.Jhaveri');
   titleSpan.style('color', 'white');
-  titleSpan.style('font-family', menuFont ? 'Jacquard12' : 'sans-serif');
+  titleSpan.style('font-family', menuFont ? 'MedievalSharp' : 'sans-serif');
   titleSpan.style('margin-right', '10px');
   titleSpan.parent(controlsDiv);
 
@@ -570,7 +570,7 @@ async function togglePlay() {
 function updateVolume() {
   // Get value from the DOM slider
   const volume = volumeSlider.value();
-  
+
   // Set the volume if the music is loaded
   if (backgroundMusic) {
     backgroundMusic.setVolume(volume);
@@ -600,14 +600,14 @@ function keyPressed() {
   // Check if we're in a scene that has a floating merchant
   if (mgr && mgr.scene && mgr.scene.oScene) {
     const actualScene = mgr.scene.oScene;
-    
+
     // Look for the merchant in common places in the scene
     const merchant = actualScene.merchant || actualScene.floatingMerchant;
-    
+
     // If the scene has a merchant property
     if (merchant) {
       const pushForce = 4; // Lower force to work with the existing dampening
-      
+
       // Apply force to the merchant's existing velocity (don't override it)
       if (keyCode === UP_ARROW || key === 'w' || key === 'W') {
         merchant.velocity.y -= pushForce;
@@ -618,12 +618,12 @@ function keyPressed() {
       } else if (keyCode === RIGHT_ARROW || key === 'd' || key === 'D') {
         merchant.velocity.x += pushForce;
       }
-      
+
       // The merchant's update() method will apply these velocity changes
       // and handle dampening, so we don't need to modify position directly
     }
   }
-  
+
   // Pass the keyPressed event to the scene if it has the method
   if (mgr && mgr.scene) {
     const actualScene = mgr.scene.oScene;
@@ -655,7 +655,7 @@ function mouseWheel(event) {
 function getMenuConfig() {
   const baseButtonWidth = Math.min(windowWidth * 0.25, 5000); // Max width
   const baseFontSize = Math.min(windowWidth * 0.15, 24); // Max font size
-  
+
   return {
     topOffset: windowHeight * 0.03,       // 3% from top
     leftOffset: windowWidth * 0.02,       // 2% from left
@@ -674,7 +674,7 @@ function updateMenuPosition() {
   if (!menuDiv) return;
 
   const deviceType = getDeviceType();
-  
+
   // Calculate dimensions based on device type and window size
   const buttonWidth = Math.min(
     windowWidth * MENU_CONFIG.BUTTON.WIDTH_PERCENTAGE[deviceType],
@@ -702,7 +702,7 @@ function updateMenuPosition() {
  */
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
-  
+
   // Update menu positioning
   updateMenuPosition();
 
@@ -733,17 +733,17 @@ function touchStarted(event) {
   const musicControls = select('#music-controls').elt;
   const menuButtons = select('#menu-buttons').elt;
   if ((musicControls && musicControls.contains(event.target)) ||
-      (menuButtons && menuButtons.contains(event.target))) {
+    (menuButtons && menuButtons.contains(event.target))) {
     // Allow touch events for music controls and menu buttons
     return true;
   }
-  
+
   if (touches.length > 0) {
     touchStartY = touches[0].y;
     lastTouchY = touches[0].y;
     touchStartX = touches[0].x;
     lastTouchX = touches[0].x;
-    
+
     if (mgr && mgr.scene) {
       const actualScene = mgr.scene.oScene;
       if (typeof actualScene.mousePressed === 'function') {
@@ -768,56 +768,56 @@ function touchMoved(event) {
   }
 
   event.preventDefault();
-  
+
   // Process merchant movement if we have touches
-  if (mgr && mgr.scene && mgr.scene.oScene && touches.length > 0 && 
-      touchStartX !== null && touchStartY !== null) {
-    
+  if (mgr && mgr.scene && mgr.scene.oScene && touches.length > 0 &&
+    touchStartX !== null && touchStartY !== null) {
+
     const actualScene = mgr.scene.oScene;
     const merchant = actualScene.merchant || actualScene.floatingMerchant;
     const isJourneyScene = actualScene.constructor.name === 'JourneyScene';
-    
+
     // Get current touch positions
     const currentTouchY = touches[0].y;
     const currentTouchX = touches[0].x;
     const touchDeltaY = lastTouchY - currentTouchY;
     const touchDeltaX = lastTouchX - currentTouchX;
-    
+
     // Merchant movement - if merchant exists and touch movement is significant
     if (merchant && !isJourneyScene) {
       const pushForce = 3; // Force for touch movement
-      
+
       // Only apply force if the touch movement is significant
       if (Math.abs(touchDeltaY) > 5) {
         // Apply vertical force (up/down)
         merchant.velocity.y -= (touchDeltaY / 10) * pushForce;
       }
-      
+
       if (Math.abs(touchDeltaX) > 5) {
         // Apply horizontal force (left/right)
         merchant.velocity.x -= (touchDeltaX / 10) * pushForce;
       }
     }
-    
+
     // Scene scrolling functionality - applies to all scenes with mouseWheel
     // Use a larger threshold for JourneyScene to make scrolling more intentional
     const touchThreshold = isJourneyScene ? 20 : 5;
-    
+
     if (Math.abs(touchDeltaY) > touchThreshold) {
       console.log("Touch scroll delta:", touchDeltaY, "in scene:", actualScene.constructor.name);
-      
+
       // For JourneyScene, handle touch scrolling with exaggerated delta
       if (isJourneyScene) {
         // Make touch scrolling more responsive for JourneyScene
         const amplifiedDelta = touchDeltaY * 3; // Amplify the effect
-        
+
         if (typeof actualScene.mouseWheel === 'function') {
           const touchEvent = {
             delta: amplifiedDelta
           };
           actualScene.mouseWheel(touchEvent);
         }
-      } 
+      }
       // For other scenes, use normal mouseWheel handling
       else if (typeof actualScene.mouseWheel === 'function') {
         const touchEvent = {
@@ -826,12 +826,12 @@ function touchMoved(event) {
         actualScene.mouseWheel(touchEvent);
       }
     }
-    
+
     // Update last touch positions
     lastTouchY = currentTouchY;
     lastTouchX = currentTouchX;
   }
-  
+
   return false;
 }
 
@@ -842,38 +842,38 @@ function deviceMoved() {
   // Update acceleration values
   accelerationX = accelerationX * 0.8 + rotationY * 0.2;
   accelerationY = accelerationY * 0.8 + rotationX * 0.2;
-  
+
   // Only proceed if tilt is enabled
   if (!tiltEnabled) return;
-  
+
   // Check if we're in a scene that has a floating merchant
   if (mgr && mgr.scene && mgr.scene.oScene) {
     const actualScene = mgr.scene.oScene;
-    
+
     // Look for the merchant in common places in the scene
     const merchant = actualScene.merchant || actualScene.floatingMerchant;
-    
+
     // If the scene has a merchant property
     if (merchant) {
       // Set thresholds for device tilt - lower threshold for higher sensitivity
       const tiltThreshold = 0.5;  // Reduced from 2 to detect smaller tilts
       const maxTiltForce = 5;     // Increased from 3 for stronger response
-      
+
       // Only apply forces if the tilt is significant enough
       if (abs(rotationY) > tiltThreshold || abs(rotationX) > tiltThreshold) {
         // Calculate force based on tilt angle with higher sensitivity
         // rotationY affects horizontal movement (left/right)
         // Divided by smaller value (10 instead of 20) for higher sensitivity
         const xForce = constrain(rotationY / 10, -maxTiltForce, maxTiltForce);
-        
+
         // rotationX affects vertical movement (up/down)
         // Divided by smaller value (10 instead of 20) for higher sensitivity
         const yForce = constrain(rotationX / 10, -maxTiltForce, maxTiltForce);
-        
+
         // Apply the forces to the merchant's velocity
         merchant.velocity.x += xForce;
         merchant.velocity.y += yForce;
-        
+
         // Log forces for debugging
         console.log(`Tilt forces: X=${xForce.toFixed(2)}, Y=${yForce.toFixed(2)}, rotX=${rotationX.toFixed(2)}, rotY=${rotationY.toFixed(2)}`);
       }
@@ -890,11 +890,11 @@ function deviceTurned() {
   rotationX = rotationX * 0.7 + constrain(rotationX, -90, 90) * 0.3;
   rotationY = rotationY * 0.7 + constrain(rotationY, -90, 90) * 0.3;
   rotationZ = rotationZ * 0.7 + constrain(rotationZ, -90, 90) * 0.3;
-  
+
   // Prevent extremely small rotations from causing noise
   if (abs(rotationX) < 0.3) rotationX = 0;
   if (abs(rotationY) < 0.3) rotationY = 0;
-  
+
   // Debug output to help with calibration
   if (frameCount % 60 === 0) { // Log once per second
     console.log(`Device orientation: X=${rotationX.toFixed(1)}, Y=${rotationY.toFixed(1)}, Z=${rotationZ.toFixed(1)}`);
@@ -920,29 +920,29 @@ function drawWaves(options) {
     timeScale: 0.0001,
     updateYoff: true
   };
-  
+
   // Merge defaults with provided options
   const config = { ...defaults, ...options };
-  
+
   // Get color settings from the specified scheme
   const colorSettings = WAVE_COLORS[config.colorScheme] || WAVE_COLORS.WELCOME;
-  
+
   const t = frameCount * config.timeScale; // Time variable for texture animation
-  
+
   // Draw wave layers with different properties
   for (let waveIndex = 0; waveIndex < config.layerCount; waveIndex++) {
     push();
-    
+
     // Configure wave layer properties - interpolate alpha based on wave index
     const alphaRange = colorSettings.ALPHA;
     const alpha = map(
-      waveIndex, 
-      0, 
-      config.layerCount - 1, 
-      alphaRange[0], 
+      waveIndex,
+      0,
+      config.layerCount - 1,
+      alphaRange[0],
       alphaRange[1]
     );
-    
+
     // Use custom color if provided, otherwise use color scheme
     let baseColor;
     if (config.customColor) {
@@ -951,28 +951,28 @@ function drawWaves(options) {
       const [r, g, b] = colorSettings.BASE;
       baseColor = color(r, g, b);
     }
-    
+
     // Apply alpha to create the wave color
     const waveColor = color(
-      red(baseColor), 
-      green(baseColor), 
-      blue(baseColor), 
+      red(baseColor),
+      green(baseColor),
+      blue(baseColor),
       alpha
     );
-    
+
     // Calculate wave boundaries
     const yMin = config.yRange.min;
     const yMax = config.yRange.max;
-    
+
     // Create the main wave shape
     beginShape();
     noStroke();
     fill(waveColor);
-    
+
     // Generate wave points using Perlin noise
     const wavePoints = [];
     let xoff = 0;
-    
+
     // Create wave vertices
     vertex(-30, height);
     for (let x = -30; x <= width + 30; x += VISUAL_SETTINGS.WAVE.STEP) {
@@ -987,18 +987,18 @@ function drawWaves(options) {
     }
     vertex(width + 20, height);
     endShape(CLOSE);
-    
+
     // Add pixelated texture within the wave shape
     addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex);
-    
+
     pop();
   }
-  
+
   // Update noise offset for continuous wave movement
   if (config.updateYoff) {
     globalYoff += VISUAL_SETTINGS.WAVE.Y_INCREMENT;
   }
-  
+
   return globalYoff; // Return the current yoff value for scenes that need it
 }
 
@@ -1012,7 +1012,7 @@ function drawWaves(options) {
  */
 function addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
   const pixelSize = 60;
-  
+
   for (let x = 0; x < width; x += pixelSize) {
     // Find wave height at current x position
     const waveX = x + 10;
@@ -1021,64 +1021,64 @@ function addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
       0,
       wavePoints.length - 2
     );
-    
+
     // Interpolate wave height
     const waveHeight = lerp(
       wavePoints[index].y,
       wavePoints[index + 1].y,
       (waveX % VISUAL_SETTINGS.WAVE.STEP) / VISUAL_SETTINGS.WAVE.STEP
     );
-    
+
     // Draw textured pixels from wave height to bottom
     for (let y = floor(waveHeight); y < height; y += pixelSize) {
       // Use noise to create a wavy pattern but consistent within each cube
       // Generate noise value once per cube for more coherent color blocks
-      const noiseVal = noise(0.03 * floor(x/pixelSize), 0.03 * floor(y/pixelSize) + waveIndex * 0.2 + t * 0.05);
-      
+      const noiseVal = noise(0.03 * floor(x / pixelSize), 0.03 * floor(y / pixelSize) + waveIndex * 0.2 + t * 0.05);
+
       // Calculate distance from wave surface - for applying color gradient
       const distanceFromSurface = y - waveHeight;
-      
+
       // Make the light part MUCH thinner - only top 8% of the water
       const thinTopLayer = (height - waveHeight) * 0.05; // Top 8% of water
       const remainingWater = (height - waveHeight) - thinTopLayer;
-      
+
       // Determine color selection strategy based on depth and wave pattern
       let tintIndex;
-      
+
       // Thin light layer at the top
       if (distanceFromSurface < thinTopLayer) {
         // Very near the surface - create a thin light layer
         const surfaceRatio = 1 - (distanceFromSurface / thinTopLayer); // 1 at surface, 0 at layer boundary
-        
+
         // Create light effect only at the very top and based on noise consistency
         if (surfaceRatio > 0.5 && noiseVal > 0.65) {
           // Light colors only at the very top of waves
           tintIndex = WAVE_TINTS.length - 1; // Lightest color
-        } 
+        }
         else if (noiseVal > 0.9) {
           // Occasional light spots in the top layer
           tintIndex = WAVE_TINTS.length - 1; // Lightest color
         }
         else {
           // Use the second-to-lightest color for most of the thin top layer
-          tintIndex = WAVE_TINTS.length - 2; 
+          tintIndex = WAVE_TINTS.length - 2;
         }
-      } 
+      }
       // Everything below the thin top layer - predominantly dark
       else {
         // Calculate how deep we are in the remaining water
         const depthRatio = constrain(map(
-          distanceFromSurface - thinTopLayer, 
-          0, 
-          remainingWater, 
-          0, 
+          distanceFromSurface - thinTopLayer,
+          0,
+          remainingWater,
+          0,
           1
         ), 0, 1);
-        
+
         // Very rare light spots in the deeper water
         if (noiseVal > 0.9 && random() > 0.98) {
           // Extremely rare light spots deep in the water
-          tintIndex = WAVE_TINTS.length - 2; 
+          tintIndex = WAVE_TINTS.length - 2;
         } else {
           // Use mostly the two darkest colors with coherent patterns
           // Higher noise values get slightly lighter colors
@@ -1086,24 +1086,24 @@ function addWaveTexture(wavePoints, waveColor, alpha, t, waveIndex) {
           tintIndex = floor(map(darkBias, 0, 1, 0, 1.8)); // Mostly darkest colors
         }
       }
-      
+
       // Ensure index is within bounds
       const safeIndex = constrain(tintIndex, 0, WAVE_TINTS.length - 1);
-      
+
       // Get the tint color
       const [r, g, b] = WAVE_TINTS[safeIndex];
-      
+
       // Apply slight brightness variation for additional texture
       const brightness = map(noise(x * 0.05, y * 0.05, t), 0, 1, 0.9, 1.1);
-      
+
       // Create fully opaque color with the tint
       const pixelColor = color(
         r * brightness,
-        g * brightness, 
+        g * brightness,
         b * brightness,
         255  // Fully opaque
       );
-      
+
       fill(pixelColor);
       noStroke();
       rect(x, y, pixelSize, pixelSize);
@@ -1122,7 +1122,7 @@ function touchEnded(event) {
     const actualScene = mgr.scene.oScene;
     console.log("Touch ended in scene:", actualScene.constructor.name);
   }
-  
+
   // Only clear if we actually had a touch start
   if (touchStartY !== null) {
     touchStartY = null;
@@ -1130,7 +1130,7 @@ function touchEnded(event) {
     touchStartX = null;
     lastTouchX = null;
   }
-  
+
   // Prevent default to avoid accidental clicks after touch
   event.preventDefault();
   return false;
