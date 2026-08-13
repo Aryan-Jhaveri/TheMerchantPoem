@@ -18,7 +18,7 @@ let rotationZ = 0;
 let accelerationX = 0;
 let accelerationY = 0;
 let accelerationZ = 0;
-let tiltEnabled = true;
+let tiltEnabled = false;
 
 // Menu buttons
 let homeButton;
@@ -394,51 +394,9 @@ function createMenuButtons() {
  */
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  // Enable device orientation and motion handling for tilt controls
-  window._disableDeviceMotion = false;
-  window._disableDeviceOrientation = false;
-  tiltEnabled = true;
-
   // Create UI controls
   createMusicControls();
   createMenuButtons();
-
-  // Init device orientation event listener for iOS
-  if (typeof window.DeviceOrientationEvent !== 'undefined' &&
-    typeof window.DeviceOrientationEvent.requestPermission === 'function') {
-    console.log("iOS device orientation detected - will request permission when user interacts");
-
-    // Create permission request button for iOS (only shown if needed)
-    const permissionButton = createButton('Enable Tilt Controls');
-    permissionButton.position(windowWidth / 2 - 100, windowHeight / 2 - 25);
-    permissionButton.size(200, 50);
-    permissionButton.style('background-color', 'rgba(0,0,0,0.5)');
-    permissionButton.style('color', 'white');
-    permissionButton.style('border', 'none');
-    permissionButton.style('border-radius', '5px');
-    permissionButton.style('font-size', '16px');
-    permissionButton.style('display', 'none');
-    permissionButton.mousePressed(() => {
-      // Request permission for device motion/orientation
-      DeviceOrientationEvent.requestPermission()
-        .then(response => {
-          if (response === 'granted') {
-            tiltEnabled = true;
-            permissionButton.style('display', 'none');
-            console.log("Device orientation permission granted");
-          } else {
-            console.log("Device orientation permission denied");
-          }
-        })
-        .catch(console.error);
-    });
-
-    // Show the button on first interaction
-    window.addEventListener('touchstart', function showPermissionButtonOnce() {
-      permissionButton.style('display', 'block');
-      window.removeEventListener('touchstart', showPermissionButtonOnce);
-    }, { once: true });
-  }
 
   mgr = new SceneManager();
   window.mgr = mgr;
